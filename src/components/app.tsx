@@ -1,31 +1,14 @@
 'use client';
 
-import React, { useEffect, useState } from "react";
-import { convertProjectsToRawText } from "@/utils";
-import FloatingButton from "./floating-button";
+import React, { useState } from "react";
+import FloatingButton from "./FloatingButton";
 import { useSelector } from "@xstate/react";
 import { ProjectActor } from "@/app/resources";
+import ProjectView from "./ProjectView";
+import { getTagsAndCount, isProjectDone } from "@/utils";
+import Button from "./Button";
 
-const updateRawText = async (text: string, onSuccess: () => void) => {
-  try {
-    const response = await fetch('/api/raw-content', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ text }),
-    });
-    const { success } = await response.json();
-    if (success) {
-      console.log('Projects saved successfully.');
-      onSuccess();
-    } else {
-      console.error('Failed to save projects.');
-    }
-  } catch (error) {
-    console.error('Error saving projects:', error);
-  }
-}
+import "@/styles/common.scss"
 
 type TagFilterState = {
   state: 'tagless' | 'tagged' | 'all';
@@ -49,80 +32,75 @@ const doneFilterStates: Record<DoneFilterState['state'], DoneFilterState> = {
   pending: { state: 'pending', label: 'Pending' },
 }
 
-type ProjectViewProps = {
-  project: Project;
-  showHeaderTags?: boolean;
+type ProjectsListProps = {
+  projects: Project[];
+  collapsed?: boolean;
+  onHide?: () => void;
+  onShow?: () => void;
 }
 
-const ProjectView: React.FC<ProjectViewProps> = ({ project, showHeaderTags }) => {
-  const [showDetails, setShowDetails] = useState(false);
-  const title = project.title
-    .replaceAll(/\[x\]|\[X\]|- |\[ \]/g, '');
+const ProjectsList: React.FC<ProjectsListProps> = ({ projects, collapsed, onHide, onShow }) => {
+  const fetchingProjects = useSelector(ProjectActor, (state) => state.matches('fetching'));
 
-  useEffect(() => {
-    setShowDetails(false);
-  }, [project]);
+  const collapseList = () => {
+    onHide?.();
+  }
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(title)
-      .then(() => {
-        console.log('Title copied to clipboard');
-      }).catch(err => {
-        console.error('Failed to copy title: ', err);
-      });
-  };
+  const expandList = () => {
+    onShow?.();
+  }
+
+  const loadProjects = () => {
+    ProjectActor.send({ type: 'FETCH' })
+  }
+
+  if (collapsed) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px',
+          textAlign: 'center',
+        }}>
+        <h2>Projects</h2>
+        <button onClick={expandList}>Show list</button>
+        <Button onClick={loadProjects} loading={fetchingProjects}>Load projects</Button>
+        <button disabled>Add project</button>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ padding: '10px', border: '1px solid white', borderRadius: '5px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-        <h4 onClick={copyToClipboard} style={{ cursor: 'pointer' }}>{title}</h4>
-        {showHeaderTags && (
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            {project.tags.map((tag, i) => (
-              <pre key={i}>{tag}</pre>
-            ))}
-          </div>
-        )}
-        {!showDetails && (
-          <div>
-            <button onClick={() => setShowDetails((prev) => !prev)} style={{ padding: '5px 10px' }}>Show details</button>
-          </div>
-        )}
+    <div style={{ overflow: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <h2 style={{ flex: '1' }}>Projects</h2>
+        <button disabled>Add project</button>
+        <Button onClick={loadProjects} loading={fetchingProjects}>Load projects</Button>
+        <button onClick={collapseList}>Hide list</button>
       </div>
-      {showDetails && (
-        <>
-          <div>
-            <button onClick={() => setShowDetails((prev) => !prev)} style={{ padding: '5px 10px' }}>Hide details</button>
-          </div>
-          <div>
-            {project.actions.map((action, i) => (
-              <div key={i}>
-                <label style={{ fontSize: '14px' }}>
-                  {`\t${action}`}
-                </label>
-              </div>
-            ))}
-          </div>
-          {project.description && (<p>{project.description}</p>)}
-          {project.tags.length > 0 && (
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-              {project.tags.map((tag, i) => (<pre key={i}>{tag}</pre>))}
-            </div>
-          )}
-        </>
-      )}
+      <hr />
+      <div>
+        {projects.map((project, i) => (<ProjectView key={i} project={project} showHeaderTags />))}
+      </div>
     </div>
   );
 };
 
+
+
 export default function App() {
   const projects = useSelector(ProjectActor, ({ context }) => context.resources);
-  const tags = [...new Set(projects.map((project) => project.tags).flat())]
+  const [tags, countedTags] = getTagsAndCount(projects);
+  // const tags = [...new Set(projects.map((project) => project.tags).flat())]
+  // const countedTags = getCountedTags(projects);
+  // const tags = getSortedTags(countedTags);
 
-  const [doneFilter, setDoneFilter] = React.useState<DoneFilterState>(doneFilterStates['pending']);
-  const [tagFilter, setTagFilter] = React.useState<TagFilterState>(tagFilterStates['tagless']);
+  const [doneFilter, setDoneFilter] = useState<DoneFilterState>(doneFilterStates['pending']);
+  const [tagFilter, setTagFilter] = useState<TagFilterState>(tagFilterStates['tagless']);
 
-  const [tagSelected, setTagSelected] = React.useState<string | undefined>(undefined);
+  const [tagSelected, setTagSelected] = useState<string | undefined>(undefined);
+  const [collapsedList, setCollapsedList] = useState(false);
 
   const filteredProjects = projects
     .filter((project) => {
@@ -138,11 +116,11 @@ export default function App() {
       if (doneFilter.state === 'all') {
         return true;
       } else if (doneFilter.state === 'done') {
-        return project.title.includes('[x]') || project.title.includes('[X]');
+        return isProjectDone(project);
       } else {
-        return !(project.title.includes('[x]') || project.title.includes('[X]'));
+        return !(isProjectDone(project));
       }
-    });
+    }).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   const tagSelectedProjects = filteredProjects
     .filter((project) => {
@@ -153,12 +131,15 @@ export default function App() {
       }
     });
 
+  const tagSelectedProjectsOrderInfo = tagSelectedProjects
+    .map((project, index) => ({ _id: project._id, order: project.order, index }))
+
   const toggleDoneFilter = () => {
     setDoneFilter((prev) => {
       if (prev.state === 'all') {
-        return doneFilterStates['done'];
-      } else if (prev.state === 'done') {
         return doneFilterStates['pending'];
+      } else if (prev.state === 'pending') {
+        return doneFilterStates['done'];
       } else {
         return doneFilterStates['all'];
       }
@@ -182,49 +163,46 @@ export default function App() {
     else setTagSelected(tag);
   }
 
-  const loadProjects = () => {
-    ProjectActor.send({ type: 'FETCH' })
-  }
-
-  const saveRawProjects = async () => {
-    const updatedRawText = convertProjectsToRawText(projects);
-    updateRawText(updatedRawText, loadProjects);
-  }
+  const Tabs = () => (
+    <div style={{ display: 'flex', flexWrap: 'wrap', columnGap: '10px', rowGap: '5px' }}>
+      {tags.map((tag, i) => (
+        <div key={i} onClick={() => selectTag(tag)} style={{ cursor: 'pointer' }}>
+          <button
+            style={{ padding: '10px', backgroundColor: tagSelected === tag ? 'gray' : 'black', color: 'white', borderRadius: ' 5px 5px 0px 0px' }}
+          >
+            {`${tag} (${countedTags[tag] ?? 0})`}
+          </button>
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-      <div style={{ display: 'flex', gap: '10px' }}>
-        <button onClick={loadProjects} style={{ padding: '5px 10px' }}>Load projects</button>
-        <button onClick={saveRawProjects} style={{ padding: '5px 10px' }}>Save (and format) projects</button>
-      </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         <h2>Filters</h2>
         <hr />
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <span>Progress status:</span>
-          <button onClick={toggleDoneFilter} style={{ padding: '5px 10px' }}>{doneFilter.label}</button>
+          <button onClick={toggleDoneFilter}>{doneFilter.label}</button>
           <span>Tagged status:</span>
-          <button onClick={toggleTagFilter} style={{ padding: '5px 10px' }}>{tagFilter.label}</button>
+          <button onClick={toggleTagFilter}>{tagFilter.label}</button>
         </div>
       </div>
       <hr />
-      <div style={{ display: 'flex', gap: '20px' }}>
-        <div style={{ flex: 1, overflow: 'auto' }}>
-          {filteredProjects.map((project, i) => (<ProjectView key={i} project={project} showHeaderTags />))}
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ flex: collapsedList ? 'none' : '1' }}>
+          <ProjectsList
+            projects={filteredProjects}
+            collapsed={collapsedList}
+            onHide={() => setCollapsedList(true)}
+            onShow={() => setCollapsedList(false)}
+          />
         </div>
+        {collapsedList && <hr />}
         <div style={{ flex: 1, overflow: 'auto' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-            {tags.map((tag, i) => (
-              <div key={i} onClick={() => selectTag(tag)} style={{ cursor: 'pointer' }}>
-                <button
-                  style={{ padding: '10px', backgroundColor: tagSelected === tag ? 'gray' : 'black', color: 'white', borderRadius: ' 5px 5px 0px 0px' }}
-                >
-                  {tag}
-                </button>
-              </div>
-            ))}
-          </div>
-          {tagSelectedProjects.map((project, i) => (<ProjectView key={i} project={project} />))}
+          <Tabs />
+          {tagSelectedProjects.map((project, i) => (<ProjectView key={i} project={project} orderInfo={tagSelectedProjectsOrderInfo} showHeaderTags />))}
         </div>
       </div>
       <FloatingButton />

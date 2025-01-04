@@ -1,0 +1,23 @@
+/* Popover.css */
+.popover-container {
+  position: relative;
+  display: inline-block;
+}
+
+.popover-content {
+  position: fixed;
+  width: 450px;
+  border: 1px solid #ccc;
+  padding: 8px;
+  z-index: 1;
+
+  @media (prefers-color-scheme: dark) {
+    background-color: #333;
+    color: white;
+  }
+
+  @media (prefers-color-scheme: light) {
+    background-color: white;
+    color: black;
+  }
+}

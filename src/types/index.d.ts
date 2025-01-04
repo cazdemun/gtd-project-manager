@@ -5,6 +5,7 @@ type Project = {
   title: string;
   actions: string[];
   description: string;
+  order?: number;
   // completed
   // scheduled
 }

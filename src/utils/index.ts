@@ -114,6 +114,43 @@ export function convertProjectToRawProject(project: Project): string {
   return `${projectContent}${projectReference}${projectMetadata}`;
 }
 
-export function convertProjectsToRawText(projects: Project[]): string {
-  return projects.map(convertProjectToRawProject).join('\n') + '\n<<END>>';
+export function isNullish<T>(value: T | null | undefined): value is null | undefined {
+  return value === null || value === undefined;
 }
+
+export function convertProjectsToRawText(projects: Project[]): string {
+  return projects.map(convertProjectToRawProject).join('\n\n') + '\n<<END>>';
+}
+
+export function isProjectDone(project: Project): boolean {
+  return project.title.includes('[x]') || project.title.includes('[X]');
+}
+
+export const getCountedTags = (projects: Project[]): Record<string, number> => {
+  const tagCount: Record<string, number> = {};
+
+  projects.forEach((project) => {
+    project.tags.forEach((tag) => {
+      if (isProjectDone(project)) {
+        tagCount[tag] = (tagCount[tag] ?? 0);
+      } else {
+        tagCount[tag] = (tagCount[tag] ?? 0) + 1;
+      }
+    });
+
+  });
+
+  return tagCount;
+};
+
+export const getSortedTags = (tagCount: Record<string, number>): string[] => {
+  return Object.entries(tagCount)
+    .sort(([, countA], [, countB]) => countB - countA)
+    .map(([tag]) => tag);
+};
+
+export const getTagsAndCount = (projects: Project[]): [string[], Record<string, number>] => {
+  const tagCount = getCountedTags(projects);
+  const tags = getSortedTags(tagCount);
+  return [tags, tagCount];
+};

@@ -135,6 +135,10 @@ export default class Repository<T extends Resource, C extends string = string> e
     return count;
   }
 
+  async deleteAll(): Promise<void> {
+    await this.saveCollection([]);
+  }
+
   static createRepository<T extends Resource, C extends string = string>(collection: C, _storageDir?: string, verbose?: boolean): Repository<T, C> {
     const storageDir = _storageDir ?? STORAGE_DIR;
     return new Repository<T, C>(collection, storageDir, verbose);

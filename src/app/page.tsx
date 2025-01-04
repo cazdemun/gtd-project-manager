@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import App from "@/components/app";
+import App from "@/components/App";
 
 export const metadata: Metadata = {
   title: 'GTD Project Manager',
