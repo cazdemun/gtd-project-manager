@@ -1,12 +1,11 @@
 'use client';
 
 import React, { useState } from "react";
-import FloatingButton from "./FloatingButton";
 import { useSelector } from "@xstate/react";
+import { FloatingButton, Button } from "@/app/ui";
 import { ProjectActor } from "@/app/resources";
 import ProjectView from "./ProjectView";
 import { getTagsAndCount, isProjectDone } from "@/utils";
-import Button from "./Button";
 
 import "@/styles/common.scss"
 

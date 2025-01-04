@@ -1,7 +1,7 @@
 import { ProjectActor } from "@/app/resources";
 import React, { useEffect, useState } from "react";
 import { AiOutlineCopy, AiOutlineCaretUp, AiOutlineCaretDown, AiOutlineEdit } from "react-icons/ai";
-import Popover from "./Popover";
+import { Popover } from "@/app/ui";
 import { getTagsAndCount } from "@/utils";
 import { useSelector } from "@xstate/react";
 
