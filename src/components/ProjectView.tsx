@@ -1,4 +1,4 @@
-import { ProjectActor } from "@/app/resources";
+import { ProjectActor, ProjectUIActor } from "@/app/resources";
 import React, { useEffect, useState } from "react";
 import { AiOutlineCopy, AiOutlineCaretUp, AiOutlineCaretDown, AiOutlineEdit } from "react-icons/ai";
 import { Popover } from "@/app/ui";
@@ -183,6 +183,10 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, showHeaderTags, orde
     swapPosition(project, orderInfo, 'down');
   }
 
+  const openModal = () => {
+    ProjectUIActor.send({ type: 'OPEN_UPDATE_MODAL', resource: project });
+  }
+
   const HeaderTags = () => (
     <Popover
       content={(
@@ -214,14 +218,14 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, showHeaderTags, orde
             <button
               className="icon-button"
               onClick={copyToClipboard}
-            >
+              >
               <AiOutlineCopy />
             </button>
           </div>
           <div>
             <button
               className="icon-button"
-              disabled
+              onClick={openModal}
             >
               <AiOutlineEdit />
             </button>

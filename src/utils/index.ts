@@ -74,16 +74,21 @@ export function convertRawProjectToProject(rawProject: string): Project | undefi
   }
 
   const titleMatch = rawProject.match(RAW_PROJECT_TITLE_REGEX);
-  const title = titleMatch ? titleMatch[0] : '';
+  const title = titleMatch ? (titleMatch[0] ?? '') : '';
+
+  if ((title?.trim() ?? '') === '') {
+    return undefined;
+  }
 
   const tagsMatch = rawProject.match(RAW_PROJECT_TAGS_REGEX)
   const _tags = tagsMatch ? tagsMatch[0] : '';
   const tags = (_tags ?? '').trim().split(' ')
     .filter((tag) => tag !== '')
-    .filter((tag) => tag.startsWith('#'));
+    .filter((tag) => tag.startsWith('#'))
 
   const actionsMatch = rawProject.match(RAW_PROJECT_ACTIONS_REGEX);
-  const actions: string[] = actionsMatch ? actionsMatch : [];
+  const actions: string[] = (actionsMatch ?? [])
+    .map((action) => action.trim());
 
   const descriptionMatch = [...rawProject.matchAll(RAW_PROJECT_DESCRIPTION_REGEX)][0];
   const description = descriptionMatch ? descriptionMatch[1] : '';
@@ -92,7 +97,7 @@ export function convertRawProjectToProject(rawProject: string): Project | undefi
     _id,
     rawProject,
     title: title?.trim() ?? '',
-    actions: actions.map((action) => action.trim()),
+    actions,
     description: description?.trim() ?? '',
     tags,
   };

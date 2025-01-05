@@ -6,6 +6,7 @@ import { FloatingButton, Button } from "@/app/ui";
 import { ProjectActor } from "@/app/resources";
 import ProjectView from "./ProjectView";
 import { getTagsAndCount, isProjectDone } from "@/utils";
+import ProjectUpdateModal from "./ProjectUpdateModal";
 
 import "@/styles/common.scss"
 
@@ -205,6 +206,7 @@ export default function App() {
         </div>
       </div>
       <FloatingButton />
+      <ProjectUpdateModal />
     </div >
   );
 }
