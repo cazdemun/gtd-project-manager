@@ -5,6 +5,8 @@ import { Popover } from "@/app/ui";
 import { getTagsAndCount } from "@/utils";
 import { useSelector } from "@xstate/react";
 
+import "./ProjectView.scss";
+
 const hasSameTags = (tagsA: string[], tagsB: string[]): boolean => {
   if (tagsA.length !== tagsB.length) return false;
   return tagsA.every((tag) => tagsB.includes(tag));
@@ -205,7 +207,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, showHeaderTags, orde
   );
 
   return (
-    <div style={{ padding: '10px', border: '1px solid white', borderRadius: '5px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+    <div className="project-view-container" style={{ padding: '10px', borderRadius: '5px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
       <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flex: '1' }}>
           <h4
@@ -218,7 +220,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, showHeaderTags, orde
             <button
               className="icon-button"
               onClick={copyToClipboard}
-              >
+            >
               <AiOutlineCopy />
             </button>
           </div>

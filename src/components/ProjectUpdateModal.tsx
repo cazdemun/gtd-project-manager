@@ -3,7 +3,7 @@ import Modal from '@/app/ui/Modal';
 import { useSelector } from '@xstate/react';
 import { ProjectActor, ProjectUIActor } from '@/app/resources';
 import { convertProjectToRawProject, convertRawProjectToProject } from '@/utils';
-import { Button } from '@/app/ui';
+import { Button, TextArea } from '@/app/ui';
 
 type ProjectUpdateModalProps = object
 
@@ -43,7 +43,7 @@ const ProjectUpdateModal: React.FC<ProjectUpdateModalProps> = () => {
         </div>
       }
     >
-      <textarea
+      <TextArea
         value={text}
         onChange={(e) => setText(e.target.value)}
         style={{ width: '100%', height: '200px' }}
