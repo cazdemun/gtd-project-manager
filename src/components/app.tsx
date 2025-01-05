@@ -21,16 +21,60 @@ const tagFilterStates: Record<TagFilterState['state'], TagFilterState> = {
   tagged: { state: 'tagged', label: 'Tagged' },
 }
 
+type TagFilterStateButtonsProps = {
+  currentFilter: TagFilterState;
+  onClick: (filterState: TagFilterState) => void;
+};
+
+const TagFilterStateButtons: React.FC<TagFilterStateButtonsProps> = ({ currentFilter, onClick }) => {
+  return (
+    <>
+      {Object.values(tagFilterStates).map((filterState) => (
+        <button
+          key={filterState.state}
+          onClick={() => onClick(filterState)}
+        >
+          {`${filterState.label} ${currentFilter.state === filterState.state ? '(✔)' : ''}`}
+        </button>
+      ))}
+    </>
+  );
+};
+
 type DoneFilterState = {
-  state: 'done' | 'pending' | 'all';
+  state: 'all' | 'done' | 'pending' | 'incubated';
   label: string;
+  disabled?: boolean;
 }
 
 const doneFilterStates: Record<DoneFilterState['state'], DoneFilterState> = {
   all: { state: 'all', label: 'All' },
   done: { state: 'done', label: 'Done' },
   pending: { state: 'pending', label: 'Pending' },
+  incubated: { state: 'incubated', label: 'Incubated', disabled: true },
 }
+
+type DoneFilterStateButtonsProps = {
+  currentFilter: DoneFilterState;
+  onClick: (filterState: DoneFilterState) => void;
+};
+
+
+const DoneFilterStateButtons: React.FC<DoneFilterStateButtonsProps> = ({ currentFilter, onClick }) => {
+  return (
+    <>
+      {Object.values(doneFilterStates).map((filterState) => (
+        <button
+          key={filterState.state}
+          onClick={() => onClick(filterState)}
+          disabled={filterState.disabled}
+        >
+          {`${filterState.label} ${currentFilter.state === filterState.state ? '(✔)' : ''}`}
+        </button>
+      ))}
+    </>
+  );
+};
 
 type ProjectsListProps = {
   projects: Project[];
@@ -122,7 +166,16 @@ export default function App() {
       }
     }).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-  const tagSelectedProjects = filteredProjects
+  const tagSelectedProjects = projects
+    .filter((project) => {
+      if (doneFilter.state === 'all') {
+        return true;
+      } else if (doneFilter.state === 'done') {
+        return isProjectDone(project);
+      } else {
+        return !(isProjectDone(project));
+      }
+    }).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
     .filter((project) => {
       if (tagSelected === undefined) {
         return false;
@@ -133,30 +186,6 @@ export default function App() {
 
   const tagSelectedProjectsOrderInfo = tagSelectedProjects
     .map((project, index) => ({ _id: project._id, order: project.order, index }))
-
-  const toggleDoneFilter = () => {
-    setDoneFilter((prev) => {
-      if (prev.state === 'all') {
-        return doneFilterStates['pending'];
-      } else if (prev.state === 'pending') {
-        return doneFilterStates['done'];
-      } else {
-        return doneFilterStates['all'];
-      }
-    });
-  }
-
-  const toggleTagFilter = () => {
-    setTagFilter((prev) => {
-      if (prev.state === 'all') {
-        return tagFilterStates['tagless'];
-      } else if (prev.state === 'tagless') {
-        return tagFilterStates['tagged'];
-      } else {
-        return tagFilterStates['all'];
-      }
-    });
-  }
 
   const selectTag = (tag: string) => {
     if (tagSelected === tag) setTagSelected(undefined);
@@ -183,10 +212,10 @@ export default function App() {
         <h2>Filters</h2>
         <hr />
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <span>Progress status:</span>
-          <button onClick={toggleDoneFilter}>{doneFilter.label}</button>
           <span>Tagged status:</span>
-          <button onClick={toggleTagFilter}>{tagFilter.label}</button>
+          <TagFilterStateButtons currentFilter={tagFilter} onClick={setTagFilter} />
+          <span>Progress status:</span>
+          <DoneFilterStateButtons currentFilter={doneFilter} onClick={setDoneFilter} />
         </div>
       </div>
       <hr />
