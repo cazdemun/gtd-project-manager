@@ -1,36 +1,23 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This project should be the entry point for all the activities. Different sources include:
+- Do main file
+- Periodic tasks from the excel file
+- TODO files from programming projects
+- Do file from work
+- Plugins to fetch tasks from other platforms (trello, jira, notion, etc).
 
-## Getting Started
+# Current features
 
-First, run the development server:
+- Load and format projects from a local file specified on the env file
+- Update project by editing its raw project text
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Copy project title to clipboard
+- Update tags using a popover
+- Change order of projects
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Toggle visibility of projects panel
+- Toggle visibility of projects details
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Filter projects by tags in tabs panel
+- Filter projects by progress status and tag status
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Sort tabs by number of pending projects
