@@ -1,6 +1,6 @@
 import { ProjectActor, ProjectUIActor } from "@/app/resources";
 import React, { useEffect, useState } from "react";
-import { AiOutlineCopy, AiOutlineCaretUp, AiOutlineCaretDown, AiOutlineEdit } from "react-icons/ai";
+import { AiOutlineCopy, AiOutlineCaretUp, AiOutlineCaretDown, AiOutlineEdit, AiOutlineDelete } from "react-icons/ai";
 import { Popover } from "@/app/ui";
 import { getTagsAndCount } from "@/utils";
 import { useSelector } from "@xstate/react";
@@ -18,7 +18,7 @@ type UpdateProjectFormProps = {
 
 const VALID_TAG_REGEX = /^(?:[a-zA-Z]+[-])*[a-zA-Z]+$/;
 
-const UpdateProjectForm: React.FC<UpdateProjectFormProps> = ({ project }) => {
+const UpdateTagsForm: React.FC<UpdateProjectFormProps> = ({ project }) => {
   const projects = useSelector(ProjectActor, ({ context }) => context.resources);
 
   const [allTags,] = getTagsAndCount(projects);
@@ -136,28 +136,13 @@ type ProjectViewProps = {
 
 const ProjectView: React.FC<ProjectViewProps> = ({ project, showHeaderTags, orderInfo }) => {
   const [showDetails, setShowDetails] = useState(false);
-  const title = project.title
-    .replaceAll(/\[x\]|\[X\]|- |\[ \]/g, '');
+  const title = project.title.replaceAll(/\[x\]|\[X\]|- |\[ \]/g, '');
 
   useEffect(() => {
     setShowDetails(false);
   }, [project]);
 
-  const toggleDetails = (e: React.MouseEvent<HTMLHeadingElement>) => {
-    e.preventDefault();
-    setShowDetails((prev) => !prev);
-  }
-
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(title)
-      .then(() => {
-        console.log('Title copied to clipboard');
-      }).catch(err => {
-        console.error('Failed to copy title: ', err);
-      });
-  };
-
-  const swapPosition = (project: Project, orderInfo: OrderInfo[], direction: 'up' | 'down') => {
+  const _swapPosition = (project: Project, orderInfo: OrderInfo[], direction: 'up' | 'down') => {
     const currentOrderInfo = orderInfo.find((item) => item._id === project._id);
     if (currentOrderInfo === undefined || currentOrderInfo.order === undefined) return;
 
@@ -175,25 +160,62 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, showHeaderTags, orde
     });
   };
 
-  const handleSwapPositionUp = () => {
-    if (!orderInfo) return;
-    swapPosition(project, orderInfo, 'up');
+  const toggleDetails = (e: React.MouseEvent<HTMLHeadingElement>) => {
+    e.preventDefault();
+    setShowDetails((prev) => !prev);
   }
 
-  const handleSwapPositionDown = () => {
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(title)
+      .then(() => {
+        console.log('Title copied to clipboard');
+      }).catch(err => {
+        console.error('Failed to copy title: ', err);
+      });
+  };
+
+  const swapPositionUp = () => {
     if (!orderInfo) return;
-    swapPosition(project, orderInfo, 'down');
+    _swapPosition(project, orderInfo, 'up');
+  }
+
+  const swapPositionDown = () => {
+    if (!orderInfo) return;
+    _swapPosition(project, orderInfo, 'down');
   }
 
   const openModal = () => {
     ProjectUIActor.send({ type: 'OPEN_UPDATE_MODAL', resource: project });
   }
 
+  const deleteProject = () => {
+    const confirmation = window.confirm('Are you sure you want to delete this project?');
+    if (confirmation) {
+      console.log('Deleting project: ', project);
+      ProjectActor.send({ type: 'DELETE', resourceIds: [project._id] });
+    }
+  }
+
+  const Content = () => (
+    <>
+      <div>
+        {project.actions.map((action, i) => (
+          <div key={i}>
+            <label style={{ fontSize: '14px' }}>
+              {`\t${action}`}
+            </label>
+          </div>
+        ))}
+      </div>
+      {project.description && (<p>{project.description}</p>)}
+    </>
+  )
+
   const HeaderTags = () => (
     <Popover
       content={(
         <div style={{ display: 'flex', gap: '10px', flexDirection: 'column' }}>
-          <UpdateProjectForm project={project} />
+          <UpdateTagsForm project={project} />
         </div>
       )}
     >
@@ -210,49 +232,31 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, showHeaderTags, orde
     <div className="project-view-container" style={{ padding: '10px', borderRadius: '5px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
       <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flex: '1' }}>
-          <h4
-            style={{ cursor: 'pointer', userSelect: 'none' }}
-            onClick={toggleDetails}
+          <Popover
+            content={<Content />}
           >
-            {title}
-          </h4>
-          <div>
-            <button
-              className="icon-button"
-              onClick={copyToClipboard}
+            <h4
+              style={{ cursor: 'pointer', userSelect: 'none' }}
+              onClick={toggleDetails}
             >
-              <AiOutlineCopy />
-            </button>
-          </div>
-          <div>
-            <button
-              className="icon-button"
-              onClick={openModal}
-            >
-              <AiOutlineEdit />
-            </button>
-          </div>
-          {showHeaderTags && !showDetails && (<HeaderTags />)}
+              {title}
+            </h4>
+          </Popover>
+          <button className="icon-button" onClick={copyToClipboard}><AiOutlineCopy /></button>
+          <button className="icon-button" onClick={openModal}><AiOutlineEdit /></button>
+          <button className="icon-button" onClick={deleteProject}><AiOutlineDelete /></button>
+          {!showDetails && showHeaderTags && (<HeaderTags />)}
         </div>
         {orderInfo && (
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <button className="icon-button" onClick={handleSwapPositionUp}><AiOutlineCaretUp /></button>
-            <button className="icon-button" onClick={handleSwapPositionDown}><AiOutlineCaretDown /></button>
+            <button className="icon-button" onClick={swapPositionUp}><AiOutlineCaretUp /></button>
+            <button className="icon-button" onClick={swapPositionDown}><AiOutlineCaretDown /></button>
           </div>
         )}
       </div>
       {showDetails && (
         <>
-          <div>
-            {project.actions.map((action, i) => (
-              <div key={i}>
-                <label style={{ fontSize: '14px' }}>
-                  {`\t${action}`}
-                </label>
-              </div>
-            ))}
-          </div>
-          {project.description && (<p>{project.description}</p>)}
+          <Content />
           <div>
             <HeaderTags />
           </div>

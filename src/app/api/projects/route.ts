@@ -164,3 +164,40 @@ export async function PUT(request: Request): Promise<Response> {
   return handlePutRequest(request);
 }
 
+export async function handleDeleteRequest<T extends Project>(
+  repository: Repository<T>,
+  request: Request
+): Promise<Response> {
+  try {
+    if (!PROJECTS_PATH) {
+      throw new Error('PROJECTS_PATH environment variable is not set');
+    }
+    const ids: string[] = await request.json();
+    if (ids.length > 0) {
+      await repository.deleteMany(ids);
+      const projects = await repository.read();
+      const rawText = await fs.readFile(PROJECTS_PATH, 'utf-8').catch(() => '')
+      const updatedRawText = convertProjectsToRawText(projects);
+
+      if (rawText !== updatedRawText) {
+        await fs.writeFile(PROJECTS_PATH, updatedRawText, 'utf-8')
+          .catch((err) => {
+            console.error('Failed to write projects file', err);
+            throw new Error('Failed to write projects file');
+          });
+      }
+    }
+    return new Response(null, { status: 204 });
+  } catch (error) {
+    console.error('Error deleting data:', error);
+    const response: ErrorResponse = { error: 'Failed to delete data.' };
+    return new Response(JSON.stringify(response), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
+
+export async function DELETE(request: Request): Promise<Response> {
+  return handleDeleteRequest(Projects, request);
+}
