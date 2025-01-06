@@ -136,7 +136,7 @@ type ProjectViewProps = {
 
 const ProjectView: React.FC<ProjectViewProps> = ({ project, showHeaderTags, orderInfo }) => {
   const [showDetails, setShowDetails] = useState(false);
-  const title = project.title.replaceAll(/\[x\]|\[X\]|- |\[ \]/g, '');
+  const title = project.title.replaceAll(/^- \[x\]|^- \[X\]|^- \[ \]|^- \[\?\]|^- /g, '').trim();  
 
   useEffect(() => {
     setShowDetails(false);

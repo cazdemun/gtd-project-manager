@@ -131,21 +131,35 @@ export function isProjectDone(project: Project): boolean {
   return project.title.includes('[x]') || project.title.includes('[X]');
 }
 
-export const getCountedTags = (projects: Project[]): Record<string, number> => {
-  const tagCount: Record<string, number> = {};
+export function isProjectIncubated(project: Project): boolean {
+  return project.title.includes('[?]');
+}
+
+export const getCountedTags = (projects: Project[]): [Record<string, number>, Record<string, number>, Record<string, number>, Record<string, number>] => {
+  const pendingTagsCount: Record<string, number> = {};
+  const doneTagsCount: Record<string, number> = {};
+  const incubatedTagsCount: Record<string, number> = {};
+  const overallTags: Record<string, number> = {};
 
   projects.forEach((project) => {
     project.tags.forEach((tag) => {
+      pendingTagsCount[tag] = (pendingTagsCount[tag] ?? 0);
+      doneTagsCount[tag] = (doneTagsCount[tag] ?? 0);
+      incubatedTagsCount[tag] = (incubatedTagsCount[tag] ?? 0);
+      overallTags[tag] = (overallTags[tag] ?? 0) + 1;
+
       if (isProjectDone(project)) {
-        tagCount[tag] = (tagCount[tag] ?? 0);
+        doneTagsCount[tag] = (doneTagsCount[tag] ?? 0) + 1;
+      } else if (isProjectIncubated(project)) {
+        incubatedTagsCount[tag] = (incubatedTagsCount[tag] ?? 0) + 1;
       } else {
-        tagCount[tag] = (tagCount[tag] ?? 0) + 1;
+        pendingTagsCount[tag] = (pendingTagsCount[tag] ?? 0) + 1;
       }
     });
 
   });
 
-  return tagCount;
+  return [pendingTagsCount, doneTagsCount, incubatedTagsCount, overallTags];
 };
 
 export const getSortedTags = (tagCount: Record<string, number>): string[] => {
@@ -154,8 +168,8 @@ export const getSortedTags = (tagCount: Record<string, number>): string[] => {
     .map(([tag]) => tag);
 };
 
-export const getTagsAndCount = (projects: Project[]): [string[], Record<string, number>] => {
-  const tagCount = getCountedTags(projects);
-  const tags = getSortedTags(tagCount);
-  return [tags, tagCount];
+export const getTagsAndCount = (projects: Project[]): [string[], Record<string, number>, Record<string, number>, Record<string, number>, Record<string, number>] => {
+  const [pendingTagsCount, doneTagsCount, incubatedTagsCount, overallTags] = getCountedTags(projects);
+  const tags = getSortedTags(pendingTagsCount);
+  return [tags, pendingTagsCount, doneTagsCount, incubatedTagsCount, overallTags];
 };

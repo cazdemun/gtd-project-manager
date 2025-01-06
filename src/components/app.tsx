@@ -5,7 +5,7 @@ import { useSelector } from "@xstate/react";
 import { FloatingButton, Button } from "@/app/ui";
 import { ProjectActor } from "@/app/resources";
 import ProjectView from "./ProjectView";
-import { getTagsAndCount, isProjectDone } from "@/utils";
+import { getTagsAndCount, isProjectDone, isProjectIncubated } from "@/utils";
 import ProjectUpdateModal from "./ProjectUpdateModal";
 
 import "@/styles/common.scss"
@@ -41,24 +41,36 @@ const TagFilterStateButtons: React.FC<TagFilterStateButtonsProps> = ({ currentFi
   );
 };
 
-type DoneFilterState = {
+type ProgressFilterState = {
   state: 'all' | 'done' | 'pending' | 'incubated';
   label: string;
   disabled?: boolean;
 }
 
-const doneFilterStates: Record<DoneFilterState['state'], DoneFilterState> = {
+const doneFilterStates: Record<ProgressFilterState['state'], ProgressFilterState> = {
   all: { state: 'all', label: 'All' },
   done: { state: 'done', label: 'Done' },
   pending: { state: 'pending', label: 'Pending' },
-  incubated: { state: 'incubated', label: 'Incubated', disabled: true },
+  incubated: { state: 'incubated', label: 'Incubated' },
+}
+
+const isProgressState = (state: ProgressFilterState['state'], project: Project): boolean => {
+  if (state === 'all') {
+    return true;
+  } else if (state === 'done') {
+    return isProjectDone(project);
+  } else if (state === 'incubated') {
+    return isProjectIncubated(project);
+  } else if (state === 'pending') {
+    return !(isProjectDone(project) || isProjectIncubated(project));
+  }
+  return false;
 }
 
 type DoneFilterStateButtonsProps = {
-  currentFilter: DoneFilterState;
-  onClick: (filterState: DoneFilterState) => void;
+  currentFilter: ProgressFilterState;
+  onClick: (filterState: ProgressFilterState) => void;
 };
-
 
 const DoneFilterStateButtons: React.FC<DoneFilterStateButtonsProps> = ({ currentFilter, onClick }) => {
   return (
@@ -135,16 +147,25 @@ const ProjectsList: React.FC<ProjectsListProps> = ({ projects, collapsed, onHide
 
 export default function App() {
   const projects = useSelector(ProjectActor, ({ context }) => context.resources);
-  const [tags, countedTags] = getTagsAndCount(projects);
-  // const tags = [...new Set(projects.map((project) => project.tags).flat())]
-  // const countedTags = getCountedTags(projects);
-  // const tags = getSortedTags(countedTags);
+  const [tags, pendingTags, doneTags, incubatedTags, overallTags] = getTagsAndCount(projects);
 
-  const [doneFilter, setDoneFilter] = useState<DoneFilterState>(doneFilterStates['pending']);
+  const [doneFilter, setDoneFilter] = useState<ProgressFilterState>(doneFilterStates['pending']);
   const [tagFilter, setTagFilter] = useState<TagFilterState>(tagFilterStates['tagless']);
 
   const [tagSelected, setTagSelected] = useState<string | undefined>(undefined);
   const [collapsedList, setCollapsedList] = useState(false);
+
+  const getTagNumberByProgress = (tag: string, progress: ProgressFilterState['state']): number => {
+    if (progress === 'done') {
+      return doneTags[tag] ?? 0;
+    } else if (progress === 'incubated') {
+      return incubatedTags[tag] ?? 0;
+    } else if (progress === 'pending') {
+      return pendingTags[tag] ?? 0;
+    } else {
+      return overallTags[tag] ?? 0;
+    }
+  }
 
   const filteredProjects = projects
     .filter((project) => {
@@ -156,26 +177,12 @@ export default function App() {
         return project.tags.length > 0;
       }
     })
-    .filter((project) => {
-      if (doneFilter.state === 'all') {
-        return true;
-      } else if (doneFilter.state === 'done') {
-        return isProjectDone(project);
-      } else {
-        return !(isProjectDone(project));
-      }
-    }).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    .filter((project) => isProgressState(doneFilter.state, project))
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   const tagSelectedProjects = projects
-    .filter((project) => {
-      if (doneFilter.state === 'all') {
-        return true;
-      } else if (doneFilter.state === 'done') {
-        return isProjectDone(project);
-      } else {
-        return !(isProjectDone(project));
-      }
-    }).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    .filter((project) => isProgressState(doneFilter.state, project))
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
     .filter((project) => {
       if (tagSelected === undefined) {
         return false;
@@ -199,7 +206,7 @@ export default function App() {
           <button
             style={{ padding: '10px', backgroundColor: tagSelected === tag ? 'gray' : 'black', color: 'white', borderRadius: ' 5px 5px 0px 0px' }}
           >
-            {`${tag} (${countedTags[tag] ?? 0})`}
+            {`${tag} (${getTagNumberByProgress(tag, doneFilter.state)})`}
           </button>
         </div>
       ))}
