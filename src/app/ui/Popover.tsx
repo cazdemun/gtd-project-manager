@@ -24,13 +24,18 @@ const Popover: React.FC<PopoverProps> = ({ children, content }) => {
       const popoverRect = popoverRef.current.getBoundingClientRect();
 
       const topBeforeCrop = triggerRect.bottom - triggerRect.height - popoverRect.height;
+      const leftBeforeCrop = triggerRect.left + triggerRect.width / 2;
 
       setPosition({
         top: topBeforeCrop < 0 ? triggerRect.bottom + window.scrollY : topBeforeCrop,
-        left: triggerRect.left + window.scrollX + triggerRect.width / 2,
+        left: leftBeforeCrop + popoverRect.width > window.innerWidth ? triggerRect.left + triggerRect.width / 2 - popoverRect.width : leftBeforeCrop,
       });
     }
   }, [isHovered]);
+
+  useEffect(() => {
+    setIsHovered(false);
+  }, [content]);
 
   const PopoverContent = () => (
     <div

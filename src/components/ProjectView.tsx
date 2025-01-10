@@ -7,9 +7,13 @@ import { useSelector } from "@xstate/react";
 
 import "./ProjectView.scss";
 
-const hasSameTags = (tagsA: string[], tagsB: string[]): boolean => {
+const isEqual = (tagsA: string[], tagsB: string[]): boolean => {
   if (tagsA.length !== tagsB.length) return false;
   return tagsA.every((tag) => tagsB.includes(tag));
+}
+
+const extracTitle = (title: string): string => {
+  return title.replaceAll(/^- \[x\]|^- \[X\]|^- \[ \]|^- \[\?\]|^- /g, '').trim();
 }
 
 type UpdateProjectFormProps = {
@@ -100,7 +104,7 @@ const UpdateTagsForm: React.FC<UpdateProjectFormProps> = ({ project }) => {
           </div>
         </div>
         <hr />
-        <button disabled={hasSameTags(project.tags, upperRowTags)} onClick={handleUpdateTags}>Update</button>
+        <button disabled={isEqual(project.tags, upperRowTags)} onClick={handleUpdateTags}>Update</button>
       </div>
       <hr />
       <form style={{ display: 'flex', gap: '10px' }} onSubmit={handleSubmitForm}>
@@ -136,20 +140,27 @@ type ProjectViewProps = {
 
 const ProjectView: React.FC<ProjectViewProps> = ({ project, showHeaderTags, orderInfo }) => {
   const [showDetails, setShowDetails] = useState(false);
-  const title = project.title.replaceAll(/^- \[x\]|^- \[X\]|^- \[ \]|^- \[\?\]|^- /g, '').trim();  
+  const title = extracTitle(project.title);
 
   useEffect(() => {
     setShowDetails(false);
   }, [project]);
 
-  const _swapPosition = (project: Project, orderInfo: OrderInfo[], direction: 'up' | 'down') => {
-    const currentOrderInfo = orderInfo.find((item) => item._id === project._id);
+  const _getTargetIndex = (currentOrderInfo: OrderInfo, orderInfos: OrderInfo[], direction: 'up' | 'down' | 'top' | 'bottom'): number | undefined => {
+    if (direction === 'top') return 0;
+    if (direction === 'bottom') return orderInfos.reduce((acc, item) => Math.max(acc, item.index), 0);
+    return direction === 'up' ? currentOrderInfo.index - 1 : currentOrderInfo.index + 1;
+  }
+
+  const _swapPosition = (project: Project, orderInfos: OrderInfo[], direction: 'up' | 'down' | 'top' | 'bottom') => {
+    const currentOrderInfo = orderInfos.find((item) => item._id === project._id);
     if (currentOrderInfo === undefined || currentOrderInfo.order === undefined) return;
 
-    const targetIndex = direction === 'up' ? currentOrderInfo.index - 1 : currentOrderInfo.index + 1;
-    const targetOrderInfo = orderInfo.find((item) => item.index === targetIndex);
-
+    const targetIndex = _getTargetIndex(currentOrderInfo, orderInfos, direction);
+    const targetOrderInfo = orderInfos.find((item) => item.index === targetIndex);
     if (targetOrderInfo === undefined || targetOrderInfo.order === undefined) return;
+
+    if (targetOrderInfo.order === currentOrderInfo.order) return; // for bottom and top cases
 
     ProjectActor.send({
       type: 'UPDATE',
@@ -159,6 +170,24 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, showHeaderTags, orde
       ],
     });
   };
+
+  const _updateProgress = (progress: " " | "x" | "?") => {
+    const title = extracTitle(project.title);
+    const newTitle = `- [${progress}] ${title}`;
+    ProjectActor.send({ type: 'UPDATE', updatedResources: [{ _id: project._id, title: newTitle }] });
+  }
+
+  const doneProject = () => {
+    _updateProgress('x');
+  }
+
+  const pendingProject = () => {
+    _updateProgress(' ');
+  }
+
+  const incubatedProject = () => {
+    _updateProgress('?');
+  }
 
   const toggleDetails = (e: React.MouseEvent<HTMLHeadingElement>) => {
     e.preventDefault();
@@ -182,6 +211,16 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, showHeaderTags, orde
   const swapPositionDown = () => {
     if (!orderInfo) return;
     _swapPosition(project, orderInfo, 'down');
+  }
+
+  const swapPositionTop = () => {
+    if (!orderInfo) return;
+    _swapPosition(project, orderInfo, 'top');
+  }
+
+  const swapPositionBottom = () => {
+    if (!orderInfo) return;
+    _swapPosition(project, orderInfo, 'bottom');
   }
 
   const openModal = () => {
@@ -211,6 +250,19 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, showHeaderTags, orde
     </>
   )
 
+  const Controls = () => (
+    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+      <button onClick={doneProject}>Done</button>
+      <button onClick={pendingProject}>In Progress</button>
+      <button onClick={incubatedProject}>Incubate</button>
+      <hr />
+      <button onClick={swapPositionTop}>Top</button>
+      <button onClick={swapPositionBottom}>Bottom</button>
+      <hr />
+      <button className="icon-button" onClick={deleteProject}><AiOutlineDelete /></button>
+    </div>
+  )
+
   const HeaderTags = () => (
     <Popover
       content={(
@@ -233,7 +285,13 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, showHeaderTags, orde
       <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flex: '1' }}>
           <Popover
-            content={<Content />}
+            content={(
+              <div style={{ display: 'flex', gap: '10px', flexDirection: 'column' }}>
+                <Content />
+                <hr />
+                <Controls />
+              </div>
+            )}
           >
             <h4
               style={{ cursor: 'pointer', userSelect: 'none' }}
@@ -244,7 +302,6 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, showHeaderTags, orde
           </Popover>
           <button className="icon-button" onClick={copyToClipboard}><AiOutlineCopy /></button>
           <button className="icon-button" onClick={openModal}><AiOutlineEdit /></button>
-          <button className="icon-button" onClick={deleteProject}><AiOutlineDelete /></button>
           {!showDetails && showHeaderTags && (<HeaderTags />)}
         </div>
         {orderInfo && (
