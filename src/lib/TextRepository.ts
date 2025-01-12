@@ -1,6 +1,9 @@
 import fs from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
-import { _create, _delete, _deleteMany, _find, _update, _updateMany } from './resourceUtils';
+import { _create } from './resourceUtils';
+import { BaseRepository } from './BaseRepository';
+
+type OverrideOptions = { text?: string }
 
 // TODO: Make end file token configurable
 // TODO: Make id token configurable
@@ -23,59 +26,26 @@ export interface TextRepositoryOptions<T extends Resource> {
 }
 
 // TODO: There is a bug where the database can be wiped out if loading goes wrong but saving goes right.
-export class TextRepository<T extends Resource> implements Repository<T> {
+export default class TextRepository<T extends Resource> extends BaseRepository<T> {
   private filePath: string;
   private options: TextRepositoryOptions<T>;
 
   constructor(filePath: string, options: TextRepositoryOptions<T>) {
+    super();
     this.filePath = filePath;
     this.options = options;
     this._ensureFileExists(filePath);
   }
 
-  public async read(query?: Record<string, string>): Promise<T[]> {
-    const resources = await this._loadResources();
-    const filteredResources = _find(resources, query);
-    return filteredResources;
-  }
-
-  public async create(newResources: NewResource<T> | NewResource<T>[]): Promise<T[]> {
+  public override async create(newResources: NewResource<T> | NewResource<T>[]): Promise<T[]> {
     const text = await this._readFile();; // optimization
-    const resources = await this._loadResources(text);
+    const resources = await this._loadResources({ text });
     const updatedResources = _create(resources, newResources);
-    const success = await this._saveResources(updatedResources, text);
+    const success = await this._saveResources(updatedResources, { text });
     return success ? updatedResources : [];
   }
 
-  public async update(_id: string, updatedDoc: Partial<T>): Promise<number> {
-    const resources = await this._loadResources();
-    const [updatedItems, updated] = _update(resources, _id, updatedDoc);
-    if (updated > 0) await this._saveResources(updatedItems);
-    return updated;
-  }
-
-  public async updateMany(updatedResources: UpdatableResource<T>[]): Promise<number> {
-    const resources = await this._loadResources();
-    const [updatedItems, updated] = _updateMany(resources, updatedResources);
-    if (updated > 0) await this._saveResources(updatedItems);
-    return updated;
-  }
-
-  public async delete(_id: string): Promise<number> {
-    const resources = await this._loadResources();
-    const [filteredItems, removed] = _delete(resources, _id);
-    if (removed > 0) await this._saveResources(filteredItems);
-    return removed;
-  }
-
-  public async deleteMany(_ids: string[]): Promise<number> {
-    const resources = await this._loadResources();
-    const [filteredItems, removed] = _deleteMany(resources, _ids);
-    if (removed > 0) await this._saveResources(filteredItems);
-    return removed;
-  }
-
-  // ---- Private helpers ----
+  // ---- Helpers ----
 
   private async _readFile(): Promise<string> {
     return await fs.readFile(this.filePath, 'utf-8');
@@ -102,9 +72,9 @@ export class TextRepository<T extends Resource> implements Repository<T> {
     return records.join('\n\n') + '\n<<END>>';
   }
 
-  private async _saveResources(resources: T[], _text?: string): Promise<boolean> {
+  async _saveResources(resources: T[], options: OverrideOptions = {}): Promise<boolean> {
     try {
-      const text = _text ?? await this._readFile();
+      const text = options?.text ?? await this._readFile();
       const updatedText = this._serializeResources(resources);
       if (updatedText === text) return true;
 
@@ -118,9 +88,9 @@ export class TextRepository<T extends Resource> implements Repository<T> {
     }
   }
 
-  private async _loadResources(_text?: string): Promise<T[]> {
+  async _loadResources(options: OverrideOptions = {}): Promise<T[]> {
     try {
-      const text = _text ?? await this._readFile();;
+      const text = options?.text ?? await this._readFile();;
       const textResources = text.match(this.options.resourceRegex) ?? [] as string[];
 
       const resources = textResources
@@ -128,7 +98,7 @@ export class TextRepository<T extends Resource> implements Repository<T> {
         .map((textResource) => this.options.parseTextResource(textResource))
         .filter((textResource): textResource is T => textResource !== undefined);
 
-      const sucess = await this._saveResources(resources, text);
+      const sucess = await this._saveResources(resources, { text });
 
       if (!sucess) return [];
 

@@ -9,3 +9,5 @@ type Project = {
   // completed
   // scheduled
 }
+
+type TextProject = Pick<Project, '_id' | 'actions' | 'description' | 'rawProject' | 'title' | 'tags'>;

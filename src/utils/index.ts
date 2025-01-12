@@ -13,6 +13,10 @@ const RAW_PROJECT_ACTIONS_REGEX = /^[ \t]+-.*?$/gms;
 const RAW_PROJECT_DESCRIPTION_REGEX = /(?:^[ \t]*-.*?\n)+(.*?)(?=^<!--ID:|^#)/gms;
 const RAW_PROJECT_TAGS_REGEX = /^#.*?(?=^<!--ID:)/gms;
 
+export function isNullish<T>(value: T | null | undefined): value is null | undefined {
+  return value === null || value === undefined;
+}
+
 export function getRawProjects(rawText: string): string[] {
   return rawText.match(RAW_PROJECT_REGEX) ?? [];
 }
@@ -122,13 +126,21 @@ export function convertProjectToRawProject(project: Project): string {
   return `${projectContent}${projectReference}${projectMetadata}`;
 }
 
-export function isNullish<T>(value: T | null | undefined): value is null | undefined {
-  return value === null || value === undefined;
-}
-
 export function convertProjectsToRawText(projects: Project[]): string {
   return projects.map(convertProjectToRawProject).join('\n\n') + '\n<<END>>';
 }
+
+export function textProjectToProject(textProjects: TextProject[], projects: Project[]): Project[] {
+  const lastOrder = projects.reduce((acc, resource) => Math.max(acc, (resource as { order?: number })?.order ?? 0), 0)
+  const projectsToCreate = textProjects
+    .map((textResource, index) => ({
+      ...textResource,
+      order: (textResource as Project)?.order ?? (lastOrder + index + 1)
+    }));
+  return projectsToCreate;
+}
+
+// --- Project Utils ---
 
 export function isProjectDone(project: Project): boolean {
   return project.title.includes('[x]') || project.title.includes('[X]');
