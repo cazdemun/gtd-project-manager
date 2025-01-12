@@ -1,4 +1,4 @@
-import Repository, { Resource, UpdateManyDoc } from '@/lib/Repository';
+import JsonRepository from '@/lib/JsonRepository';
 import { convertProjectsToRawText, convertRawProjectToProject, getRawProjects, insertIdentifierToRawProject } from '@/utils';
 import { promises as fs } from 'fs';
 
@@ -8,15 +8,7 @@ type ErrorResponse = {
 
 const PROJECTS_PATH = process.env.PROJECTS_PATH;
 
-const Projects = Repository.createRepository<Project>('projects');
-
-// type Project = {
-//   _id: string;
-//   rawText: string;
-//   tags: string[];
-//   title: string;
-//   description: string;
-// }
+const Projects = new JsonRepository<Project>('projects');
 
 // Normalize means adding a unique identifier and formatting the text with the correct spaces
 const getFromFileAndNormalizeProjects = async (path: string): Promise<Project[]> => {
@@ -106,7 +98,7 @@ function _update<T extends Project>(_id: string, updatedDoc: Partial<T>, items: 
   return [items, 1];
 }
 
-async function _updateMany<T extends Project>(docs: UpdateManyDoc<T>[], path: string): Promise<number> {
+async function _updateMany<T extends Project>(docs: UpdatableResource<T>[], path: string): Promise<number> {
   if (docs.length === 0) return 0;
   let total = 0;
   let items = await getFromFileAndNormalizeProjects(path);
@@ -140,7 +132,7 @@ export async function handlePutRequest<T extends Resource>(request: Request): Pr
       throw new Error('PROJECTS_PATH environment variable is not set');
     }
 
-    const _updatedDocs: UpdateManyDoc<T> | UpdateManyDoc<T>[] = await request.json();
+    const _updatedDocs: UpdatableResource<T> | UpdatableResource<T>[] = await request.json();
     const updatedDocs = Array.isArray(_updatedDocs) ? _updatedDocs : [_updatedDocs];
 
     const updatedData = await _updateMany(updatedDocs, PROJECTS_PATH)

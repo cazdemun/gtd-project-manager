@@ -1,10 +1,11 @@
-import { Resource } from '@/lib/Repository';
 import { setup, assign, assertEvent, createActor } from 'xstate';
 
 type MachineContext<T extends Resource> = {
   selectedResource?: T;
 };
 
+// TODO: Add OPEN_CREATE_MODAL
+// TODO: Add OPEN_DELETE_MODAL
 type MachineEvent<T> =
   | { type: 'OPEN_UPDATE_MODAL'; resource: T }
   | { type: 'CLOSE_MODAL'; }

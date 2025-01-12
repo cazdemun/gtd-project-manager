@@ -2,7 +2,10 @@ import { v4 as uuidv4 } from 'uuid';
 
 // https://www.regular-expressions.info/conditional.html
 // https://stackoverflow.com/questions/39222950/regular-expression-with-if-condition
-const RAW_PROJECT_REGEX = /^- .*?(?:(?=<!--ID: [a-f0-9-]{36}-->$)<!--ID: [a-f0-9-]{36}-->$|(?=^-|<<END>>))/gms;
+// - A project always starts with a title, which is a line starting with a dash.
+// - We capture everything lazily until we finish the ID. 
+// - If there is no ID, we capture until the start of the next project or the end of the file.
+export const RAW_PROJECT_REGEX = /^- .*?(?:(?=<!--ID: [a-f0-9-]{36}-->$)<!--ID: [a-f0-9-]{36}-->$|(?=^-|<<END>>))/gms;
 
 const RAW_PROJECT_UUID_REGEX = /<!--ID: ([a-f0-9-]{36})-->$/;
 const RAW_PROJECT_TITLE_REGEX = /^-.*?$/gms;

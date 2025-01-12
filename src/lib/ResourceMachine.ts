@@ -1,6 +1,4 @@
-import { UpdateManyDoc } from '@/lib/Repository';
 import { setup, fromPromise, assign, assertEvent, createActor } from 'xstate';
-import { Resource, NewDoc } from './Repository';
 
 const API_SEGMENT = 'api/'
 
@@ -14,7 +12,7 @@ const fetchResources = async <T extends Resource>(collection: string): Promise<T
   return response.json();
 };
 
-const createResources = async <T extends Resource>(collection: string, newResources: NewDoc<T> | NewDoc<T>[]): Promise<T[]> => {
+const createResources = async <T extends Resource>(collection: string, newResources: NewResource<T> | NewResource<T>[]): Promise<T[]> => {
   const response = await fetch(`${API_SEGMENT}${collection}`, {
     method: 'POST',
     headers: {
@@ -30,7 +28,7 @@ const createResources = async <T extends Resource>(collection: string, newResour
   return response.json();
 };
 
-const updateResources = async <T extends Resource>(collection: string, updatedResources: UpdateManyDoc<T> | UpdateManyDoc<T>[]): Promise<number> => {
+const updateResources = async <T extends Resource>(collection: string, updatedResources: UpdatableResource<T> | UpdatableResource<T>[]): Promise<number> => {
   const response = await fetch(`${API_SEGMENT}${collection}`, {
     method: 'PUT',
     headers: {
@@ -70,8 +68,8 @@ type ResourceMachineContext<T extends Resource> = {
 
 type ResourceMachineEvent<T extends Resource> =
   | { type: 'FETCH'; afterFetch?: () => void | Promise<void> }
-  | { type: 'CREATE'; newResources: NewDoc<T> | NewDoc<T>[]; afterCreate?: () => void | Promise<void> }
-  | { type: 'UPDATE'; updatedResources: UpdateManyDoc<T> | UpdateManyDoc<T>[]; afterUpdate?: () => void | Promise<void> }
+  | { type: 'CREATE'; newResources: NewResource<T> | NewResource<T>[]; afterCreate?: () => void | Promise<void> }
+  | { type: 'UPDATE'; updatedResources: UpdatableResource<T> | UpdatableResource<T>[]; afterUpdate?: () => void | Promise<void> }
   | { type: 'DELETE'; resourceIds: string | string[]; afterDelete?: () => void | Promise<void> };
 
 export const createResourceMachine = <T extends Resource>() => {
@@ -89,12 +87,12 @@ export const createResourceMachine = <T extends Resource>() => {
         input.afterFetch?.();
         return user;
       }),
-      createResources: fromPromise<T[], { collection: string, newResources: NewDoc<T> | NewDoc<T>[], afterCreate?: () => void | Promise<void> }>(async ({ input }) => {
+      createResources: fromPromise<T[], { collection: string, newResources: NewResource<T> | NewResource<T>[], afterCreate?: () => void | Promise<void> }>(async ({ input }) => {
         const resources = await createResources<T>(input.collection, input.newResources);
         input.afterCreate?.();
         return resources;
       }),
-      updateResources: fromPromise<number, { collection: string, updatedResources: UpdateManyDoc<T> | UpdateManyDoc<T>[], afterUpdate?: () => void | Promise<void> }>(async ({ input }) => {
+      updateResources: fromPromise<number, { collection: string, updatedResources: UpdatableResource<T> | UpdatableResource<T>[], afterUpdate?: () => void | Promise<void> }>(async ({ input }) => {
         const updatedCount = await updateResources<T>(input.collection, input.updatedResources);
         input.afterUpdate?.();
         return updatedCount;

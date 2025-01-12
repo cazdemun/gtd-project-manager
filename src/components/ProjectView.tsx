@@ -255,9 +255,13 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, showHeaderTags, orde
       <button onClick={doneProject}>Done</button>
       <button onClick={pendingProject}>In Progress</button>
       <button onClick={incubatedProject}>Incubate</button>
-      <hr />
-      <button onClick={swapPositionTop}>Top</button>
-      <button onClick={swapPositionBottom}>Bottom</button>
+      {orderInfo && (
+        <>
+          <hr />
+          <button onClick={swapPositionTop}>Top</button>
+          <button onClick={swapPositionBottom}>Bottom</button>
+        </>
+      )}
       <hr />
       <button className="icon-button" onClick={deleteProject}><AiOutlineDelete /></button>
     </div>
