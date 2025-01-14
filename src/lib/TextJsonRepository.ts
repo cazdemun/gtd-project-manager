@@ -59,7 +59,7 @@ export default class TextJsonRepository<T extends U, U extends Resource> extends
       const [jsonResourcesAfterUpdate] = _updateMany(jsonResourcesAfterDelete, resourcesToUpdate as T[]);
 
       // Create resources that are in the text file but not in the json file
-      const resourcesToCreate = textResources.filter((textRes) => !this.isIn(jsonResources, textRes))
+      const resourcesToCreate = textResources.filter((textRes) => !this.isIn(jsonResourcesAfterUpdate, textRes))
       const expandedResourcesToCreate = this.options.expandTextResources(resourcesToCreate, jsonResourcesAfterUpdate);
       const jsonResourcesAfterCreate = _create(jsonResourcesAfterUpdate, expandedResourcesToCreate);
 

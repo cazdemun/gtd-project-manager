@@ -2,7 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { BaseRepository } from './BaseRepository';
 
-const STORAGE_DIR = './data';
+const DIR_PATH = './data';
 
 // TODO: There is a bug where the database can be wiped out if loading goes wrong but saving goes right.
 export default class JsonRepository<T extends Resource> extends BaseRepository<T> {
@@ -10,22 +10,24 @@ export default class JsonRepository<T extends Resource> extends BaseRepository<T
   filePath: string;
   verbose: boolean;
 
-  constructor(collection: string, storageDir?: string, verbose: boolean = false) {
+  constructor(collection: string, dirPath: string = DIR_PATH, verbose: boolean = false) {
     super();
     this.collection = collection;
-    const storageDirPath = storageDir ?? STORAGE_DIR;
-    this.filePath = path.join(storageDirPath, `${collection}.json`);
+    this.filePath = path.join(dirPath, `${collection}.json`);
     this.verbose = verbose;
-    this._ensureDirectoryExists(storageDirPath);
+    this._ensureCollectionExists(dirPath);
   }
 
   // ---- Helpers ----
 
-  private async _ensureDirectoryExists(directory: string): Promise<void> {
+  private async _ensureCollectionExists(directory: string): Promise<void> {
+    const collectionPath = path.join(directory, `${this.collection}.json`);
     try {
       await fs.access(directory);
+      await fs.access(collectionPath);
     } catch {
       await fs.mkdir(directory, { recursive: true });
+      await fs.writeFile(collectionPath, '[]', 'utf-8');
     }
   }
 

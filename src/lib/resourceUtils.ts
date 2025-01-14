@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 
-export function _find<T extends Resource>(resources: T[], query?: Record<string, string>): T[] {
+export function _find<T extends Resource>(resources: T[], query?: Record<string, string | boolean>): T[] {
   if (!query) return resources;
   return resources.filter((resource) =>
     Object.entries(query).every(([key, value]) => resource[key as keyof T] === value)

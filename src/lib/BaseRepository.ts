@@ -4,7 +4,7 @@ export abstract class BaseRepository<T extends Resource> implements Repository<T
   constructor() {
   }
 
-  async read(query?: Record<string, string>): Promise<T[]> {
+  async read(query?: Record<string, string | boolean>): Promise<T[]> {
     const resources = await this._loadResources();
     const filteredResources = _find(resources, query);
     return filteredResources;

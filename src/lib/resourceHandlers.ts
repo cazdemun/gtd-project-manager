@@ -1,5 +1,5 @@
-class SuccessResponse extends Response {
-  constructor(body: string, status: number) {
+export class SuccessResponse extends Response {
+  constructor(body: string, status: number = 200) {
     super(body, {
       status,
       headers: { 'Content-Type': 'application/json' },
@@ -7,7 +7,7 @@ class SuccessResponse extends Response {
   }
 }
 
-class ErrorResponse extends Response {
+export class ErrorResponse extends Response {
   constructor(message: string) {
     const body = JSON.stringify({ error: message });
     super(body, {

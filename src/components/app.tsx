@@ -3,10 +3,11 @@
 import React, { useState } from "react";
 import { useSelector } from "@xstate/react";
 import { FloatingButton, Button } from "@/app/ui";
-import { ProjectActor } from "@/app/resources";
+import { ProjectActor, SourceActor } from "@/app/resources";
 import ProjectView from "./ProjectView";
 import { getTagsAndCount, isProjectDone, isProjectIncubated } from "@/utils";
 import ProjectUpdateModal from "./ProjectUpdateModal";
+import Header from "./Header";
 
 import "@/styles/common.scss"
 
@@ -107,6 +108,7 @@ const ProjectsList: React.FC<ProjectsListProps> = ({ projects, collapsed, onHide
   }
 
   const loadProjects = () => {
+    SourceActor.send({ type: 'FETCH' })
     ProjectActor.send({ type: 'FETCH' })
   }
 
@@ -214,35 +216,38 @@ export default function App() {
   );
 
   return (
-    <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        <h2>Filters</h2>
+    <>
+      <Header />
+      <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <h2>Filters</h2>
+          <hr />
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <span>Tagged status:</span>
+            <TagFilterStateButtons currentFilter={tagFilter} onClick={setTagFilter} />
+            <span>Progress status:</span>
+            <DoneFilterStateButtons currentFilter={doneFilter} onClick={setDoneFilter} />
+          </div>
+        </div>
         <hr />
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <span>Tagged status:</span>
-          <TagFilterStateButtons currentFilter={tagFilter} onClick={setTagFilter} />
-          <span>Progress status:</span>
-          <DoneFilterStateButtons currentFilter={doneFilter} onClick={setDoneFilter} />
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ flex: collapsedList ? 'none' : '1' }}>
+            <ProjectsList
+              projects={filteredProjects}
+              collapsed={collapsedList}
+              onHide={() => setCollapsedList(true)}
+              onShow={() => setCollapsedList(false)}
+            />
+          </div>
+          {collapsedList && <hr />}
+          <div style={{ flex: 2, overflow: 'auto' }}>
+            <Tabs />
+            {tagSelectedProjects.map((project, i) => (<ProjectView key={i} project={project} orderInfo={tagSelectedProjectsOrderInfo} showHeaderTags />))}
+          </div>
         </div>
-      </div>
-      <hr />
-      <div style={{ display: 'flex', gap: '10px' }}>
-        <div style={{ flex: collapsedList ? 'none' : '1' }}>
-          <ProjectsList
-            projects={filteredProjects}
-            collapsed={collapsedList}
-            onHide={() => setCollapsedList(true)}
-            onShow={() => setCollapsedList(false)}
-          />
-        </div>
-        {collapsedList && <hr />}
-        <div style={{ flex: 1, overflow: 'auto' }}>
-          <Tabs />
-          {tagSelectedProjects.map((project, i) => (<ProjectView key={i} project={project} orderInfo={tagSelectedProjectsOrderInfo} showHeaderTags />))}
-        </div>
-      </div>
-      <FloatingButton />
-      <ProjectUpdateModal />
-    </div >
+        <FloatingButton />
+        <ProjectUpdateModal />
+      </div >
+    </>
   );
 }

@@ -52,11 +52,7 @@ export default class TextRepository<T extends Resource> extends BaseRepository<T
   }
 
   private async _ensureFileExists(filePath: string): Promise<void> {
-    try {
-      await fs.access(filePath);
-    } catch {
-      await fs.writeFile(filePath, '<<END>>', 'utf-8');
-    }
+    await fs.access(filePath);
   }
 
   private _normalizeTextResource(textResource: string): string {
