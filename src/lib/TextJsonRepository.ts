@@ -54,9 +54,10 @@ export default class TextJsonRepository<T extends U, U extends Resource> extends
 
       // Update resources that are in both the text file and the json file
       // We filter `textResources` as it contains new resources that are not in the json file
-      // We typecast `resourcesToUpdate` to `T[]` since T extends U, so the update will not add extra properties
+      // User expanded resources helps when new properties are added so we updated the already existing resources
       const resourcesToUpdate = textResources.filter((textRes) => this.isIn(jsonResources, textRes));
-      const [jsonResourcesAfterUpdate] = _updateMany(jsonResourcesAfterDelete, resourcesToUpdate as T[]);
+      const expandedResourcesToUpdate = this.options.expandTextResources(resourcesToUpdate, jsonResourcesAfterDelete);
+      const [jsonResourcesAfterUpdate] = _updateMany(jsonResourcesAfterDelete, expandedResourcesToUpdate);
 
       // Create resources that are in the text file but not in the json file
       const resourcesToCreate = textResources.filter((textRes) => !this.isIn(jsonResourcesAfterUpdate, textRes))

@@ -5,7 +5,12 @@ type Project = {
   title: string;
   actions: string[];
   description: string;
-  order?: number;
+  order: number;
+  periodic: boolean;
+  periodicData?: {
+    scheduled?: number;
+    period?: number;
+  }
   // completed
   // scheduled
 }
@@ -21,4 +26,10 @@ type Source = {
   order: number;
   selected?: boolean;
   // type: 'file' | 'url';
+}
+
+type DoneRecord = {
+  _id: string;
+  projectId: string;
+  date: number;
 }

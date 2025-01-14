@@ -44,7 +44,7 @@ export function convertRawProjectsToRawText(rawProjects: string[]): string {
 }
 
 /**
- * Load a project from a raw project string.
+ * Load a project from a text string.
  * 
  * This function is part of a processing pipeline that assumes 
  * the raw project string contains an ID at the final line. 
@@ -72,37 +72,37 @@ export function convertRawProjectsToRawText(rawProjects: string[]): string {
  * //   tags: ['#tag1', '#tag2'],
  * // }
  */
-export function convertRawProjectToProject(rawProject: string): Project | undefined {
-  const idMatch = rawProject.match(RAW_PROJECT_UUID_REGEX);
+export function textToTextProject(text: string): TextProject | undefined {
+  const idMatch = text.match(RAW_PROJECT_UUID_REGEX);
   const _id = idMatch ? idMatch[1] : '';
 
   if (!_id) {
     return undefined;
   }
 
-  const titleMatch = rawProject.match(RAW_PROJECT_TITLE_REGEX);
+  const titleMatch = text.match(RAW_PROJECT_TITLE_REGEX);
   const title = titleMatch ? (titleMatch[0] ?? '') : '';
 
   if ((title?.trim() ?? '') === '') {
     return undefined;
   }
 
-  const tagsMatch = rawProject.match(RAW_PROJECT_TAGS_REGEX)
+  const tagsMatch = text.match(RAW_PROJECT_TAGS_REGEX)
   const _tags = tagsMatch ? tagsMatch[0] : '';
   const tags = (_tags ?? '').trim().split(' ')
     .filter((tag) => tag !== '')
     .filter((tag) => tag.startsWith('#'))
 
-  const actionsMatch = rawProject.match(RAW_PROJECT_ACTIONS_REGEX);
+  const actionsMatch = text.match(RAW_PROJECT_ACTIONS_REGEX);
   const actions: string[] = (actionsMatch ?? [])
     .map((action) => action.trim());
 
-  const descriptionMatch = [...rawProject.matchAll(RAW_PROJECT_DESCRIPTION_REGEX)][0];
+  const descriptionMatch = [...text.matchAll(RAW_PROJECT_DESCRIPTION_REGEX)][0];
   const description = descriptionMatch ? descriptionMatch[1] : '';
 
   return {
     _id,
-    rawProject,
+    rawProject: text,
     title: title?.trim() ?? '',
     actions,
     description: description?.trim() ?? '',
@@ -110,7 +110,7 @@ export function convertRawProjectToProject(rawProject: string): Project | undefi
   };
 }
 
-export function convertProjectToRawProject(project: Project): string {
+export function convertProjectToRawProject(project: TextProject): string {
   // project content
   const actions = project.actions.map((action) => `\t${action}`).join('\n');
   const titleActionsSeparator = actions.length > 0 ? '\n' : '';
@@ -130,13 +130,23 @@ export function convertProjectsToRawText(projects: Project[]): string {
   return projects.map(convertProjectToRawProject).join('\n\n') + '\n<<END>>';
 }
 
-export function textProjectToProject(textProjects: TextProject[], projects: Project[]): Project[] {
+function isTextProjectPeriodic(textProject: TextProject): boolean {
+  return textProject.title.match(/- .*?#periodic/) !== null;
+}
+
+function textProjectToProject(textProject: TextProject, projectsMap: Map<string, Project>, newOrder: number): Project {
+  const order = projectsMap.get(textProject._id)?.order ?? newOrder;
+  return {
+    ...textProject,
+    order: order,
+    periodic: isTextProjectPeriodic(textProject),
+  };
+}
+
+export function textProjectsToProjects(textProjects: TextProject[], projects: Project[]): Project[] {
   const lastOrder = projects.reduce((acc, resource) => Math.max(acc, (resource as { order?: number })?.order ?? 0), 0)
-  const projectsToCreate = textProjects
-    .map((textResource, index) => ({
-      ...textResource,
-      order: (textResource as Project)?.order ?? (lastOrder + index + 1)
-    }));
+  const projectsMap = new Map(projects.map((project) => [project._id, project]));
+  const projectsToCreate = textProjects.map((textProject, index) => textProjectToProject(textProject, projectsMap, lastOrder + index + 1));
   return projectsToCreate;
 }
 
