@@ -5,6 +5,8 @@ type Project = {
   title: string;
   actions: string[];
   description: string;
+  // Metadata
+  done?: number;
   order: number;
   periodic: boolean;
   periodicData?: {

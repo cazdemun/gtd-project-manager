@@ -174,7 +174,13 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, showHeaderTags, orde
   const _updateProgress = (progress: " " | "x" | "?") => {
     const title = extracTitleText(project.title);
     const newTitle = `- [${progress}] ${title}`;
-    ProjectActor.send({ type: 'UPDATE', updatedResources: [{ _id: project._id, title: newTitle }] });
+    ProjectActor.send({
+      type: 'UPDATE', updatedResources: [{
+        _id: project._id,
+        title: newTitle,
+        done: progress === 'x' ? Date.now() : undefined,
+      }]
+    });
   }
 
   const doneProject = () => {
