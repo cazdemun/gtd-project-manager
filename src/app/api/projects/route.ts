@@ -3,22 +3,22 @@ import { ErrorResponse, handleDeleteRequest, handleGetRequest, handlePostRequest
 import TextRepository from "@/lib/TextRepository";
 import JsonRepository from "@/lib/JsonRepository";
 import TextJsonRepository from "@/lib/TextJsonRepository";
-import { RAW_PROJECT_REGEX, convertProjectToRawProject, convertRawProjectToProject, textProjectToProject } from "@/utils";
+import { RAW_PROJECT_REGEX, textProjectToText, textToTextProject, textProjectsToProjects } from "@/utils";
 import path from "path";
 
 // const PROJECTS_PATH = process.env.PROJECTS_PATH;
 
 const createProjectTextJsonRepository = (path: string, collection: string) => {
-  const TextProjects = new TextRepository<Project>(path, {
+  const TextProjects = new TextRepository<TextProject>(path, {
     resourceRegex: RAW_PROJECT_REGEX,
-    parseTextResource: convertRawProjectToProject,
-    serializeResource: convertProjectToRawProject,
+    parseTextResource: textToTextProject,
+    serializeTextResource: textProjectToText,
   });
 
   const JsonProjects = new JsonRepository<Project>(collection);
 
   const TextJsonProject = new TextJsonRepository<Project, TextProject>(TextProjects, JsonProjects, {
-    expandTextResources: textProjectToProject
+    expandTextResources: textProjectsToProjects
   });
   return TextJsonProject;
 }

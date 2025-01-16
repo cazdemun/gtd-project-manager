@@ -22,7 +22,7 @@ export interface TextRepositoryOptions<T extends Resource> {
    * 
    * Used for creating new records and updating existing ones.
   */
-  serializeResource: (resource: T) => string;
+  serializeTextResource: (resource: T) => string;
 }
 
 // TODO: There is a bug where the database can be wiped out if loading goes wrong but saving goes right.
@@ -63,15 +63,15 @@ export default class TextRepository<T extends Resource> extends BaseRepository<T
     return `${textResource}`;
   }
 
-  private _serializeResources(resources: T[]): string {
-    const records = resources.map((item) => this.options.serializeResource(item));
+  private _serializeTextResources(resources: T[]): string {
+    const records = resources.map((item) => this.options.serializeTextResource(item));
     return records.join('\n\n') + '\n<<END>>';
   }
 
   async _saveResources(resources: T[], options: OverrideOptions = {}): Promise<boolean> {
     try {
       const text = options?.text ?? await this._readFile();
-      const updatedText = this._serializeResources(resources);
+      const updatedText = this._serializeTextResources(resources);
       if (updatedText === text) return true;
 
       await fs.writeFile(this.filePath, updatedText, 'utf-8')

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Modal from '@/app/ui/Modal';
 import { useSelector } from '@xstate/react';
 import { ProjectActor, ProjectUIActor } from '@/app/resources';
-import { convertProjectToRawProject, textToTextProject } from '@/utils';
+import { textProjectToText, textToTextProject } from '@/utils';
 import { Button, TextArea } from '@/app/ui';
 
 type ProjectUpdateModalProps = object
@@ -18,7 +18,7 @@ const ProjectUpdateModal: React.FC<ProjectUpdateModalProps> = () => {
 
   useEffect(() => {
     if (!selectedProject) return;
-    setText(convertProjectToRawProject(selectedProject));
+    setText(textProjectToText(selectedProject));
   }, [selectedProject]);
 
 

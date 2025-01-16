@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 // https://www.regular-expressions.info/conditional.html
 // https://stackoverflow.com/questions/39222950/regular-expression-with-if-condition
-// - A project always starts with a title, which is a line starting with a dash.
+// - A project always starts with a title, which is a line starting with a hyphen.
 // - We capture everything lazily until we finish the ID. 
 // - If there is no ID, we capture until the start of the next project or the end of the file.
 export const RAW_PROJECT_REGEX = /^- .*?(?:(?=<!--ID: [a-f0-9-]{36}-->$)<!--ID: [a-f0-9-]{36}-->$|(?=^-|<<END>>))/gms;
@@ -46,10 +46,10 @@ export function convertRawProjectsToRawText(rawProjects: string[]): string {
 /**
  * Load a project from a text string.
  * 
- * This function is part of a processing pipeline that assumes 
- * the raw project string contains an ID at the final line. 
- * 
- * If the ID is not found, the function will return undefined.
+ * This function is part of a processing pipeline that assumes the raw project string contains 
+ * an ID at the final line. If the ID is not found, the function will return undefined. For this
+ * schema, if the title is not found either, the function will return undefined, as is the minimal
+ * information required to create a project.
  * 
  * @param rawProject - The raw project string.
  * @returns The project or undefined if there is no ID detected.
@@ -62,7 +62,8 @@ export function convertRawProjectsToRawText(rawProjects: string[]): string {
  * Additional description.
  * 
  * #tag1 #tag2
- * <!--ID: 123e4567-e89b-12d3-a456-426614174000-->`);
+ * <!--ID: 123e4567-e89b-12d3-a456-426614174000-->`)`
+ * 
  * // Returns: {
  * //   _id: '123e4567-e89b-12d3-a456-426614174000',
  * //   rawText: `...`,
@@ -76,41 +77,39 @@ export function textToTextProject(text: string): TextProject | undefined {
   const idMatch = text.match(RAW_PROJECT_UUID_REGEX);
   const _id = idMatch ? idMatch[1] : '';
 
-  if (!_id) {
-    return undefined;
-  }
+  if (!_id) return undefined;
 
   const titleMatch = text.match(RAW_PROJECT_TITLE_REGEX);
-  const title = titleMatch ? (titleMatch[0] ?? '') : '';
+  const _title = titleMatch ? (titleMatch[0] ?? '') : '';
+  const title = _title?.trim() ?? '';
 
-  if ((title?.trim() ?? '') === '') {
-    return undefined;
-  }
-
-  const tagsMatch = text.match(RAW_PROJECT_TAGS_REGEX)
-  const _tags = tagsMatch ? tagsMatch[0] : '';
-  const tags = (_tags ?? '').trim().split(' ')
-    .filter((tag) => tag !== '')
-    .filter((tag) => tag.startsWith('#'))
+  if (title === '') return undefined;
 
   const actionsMatch = text.match(RAW_PROJECT_ACTIONS_REGEX);
   const actions: string[] = (actionsMatch ?? [])
     .map((action) => action.trim());
 
   const descriptionMatch = [...text.matchAll(RAW_PROJECT_DESCRIPTION_REGEX)][0];
-  const description = descriptionMatch ? descriptionMatch[1] : '';
+  const _description = descriptionMatch ? descriptionMatch[1] : '';
+  const description = _description?.trim() ?? '';
+
+  const tagsMatch = text.match(RAW_PROJECT_TAGS_REGEX)
+  const _tags = tagsMatch ? tagsMatch[0] : '';
+  const tags = (_tags ?? '').trim().split(' ')
+    .filter((tag) => tag !== '')
+    .filter((tag) => tag.startsWith('#'));
 
   return {
     _id,
     rawProject: text,
-    title: title?.trim() ?? '',
+    title,
     actions,
-    description: description?.trim() ?? '',
+    description,
     tags,
   };
 }
 
-export function convertProjectToRawProject(project: TextProject): string {
+export function textProjectToText(project: TextProject): string {
   // project content
   const actions = project.actions.map((action) => `\t${action}`).join('\n');
   const titleActionsSeparator = actions.length > 0 ? '\n' : '';
@@ -126,8 +125,8 @@ export function convertProjectToRawProject(project: TextProject): string {
   return `${projectContent}${projectReference}${projectMetadata}`;
 }
 
-export function convertProjectsToRawText(projects: Project[]): string {
-  return projects.map(convertProjectToRawProject).join('\n\n') + '\n<<END>>';
+export function textProjectsToText(projects: Project[]): string {
+  return projects.map(textProjectToText).join('\n\n') + '\n<<END>>';
 }
 
 function isTextProjectPeriodic(textProject: TextProject): boolean {
