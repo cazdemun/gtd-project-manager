@@ -28,12 +28,15 @@ const Header: React.FC<HeaderProps> = () => {
       <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
         <AiOutlineMenu style={{ cursor: 'pointer' }} onClick={showSidebar} />
         {currentSource && <span>{currentSource.title}</span>}
+        {!currentSource && <span>[No source]</span>}
         <div style={{ display: 'flex', gap: '10px' }}>
           <span style={{ cursor: 'pointer' }}><strong>Projects</strong></span>
           <hr />
           <span style={{ cursor: 'pointer', color: 'gray' }}>Periodic Projects</span>
           <hr />
           <span style={{ cursor: 'pointer', color: 'gray' }}>Explorer</span>
+          <hr />
+          <span style={{ cursor: 'pointer', color: 'gray' }}>GTD</span>
         </div>
       </div>
       <Sidebar visible={sidebarVisible} onClose={hideSidebar} />
