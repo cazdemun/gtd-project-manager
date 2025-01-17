@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import { isDoneDate } from './dates';
 
 // https://www.regular-expressions.info/conditional.html
 // https://stackoverflow.com/questions/39222950/regular-expression-with-if-condition
@@ -159,7 +160,9 @@ export function isProjectIncubated(project: Project): boolean {
   return project.title.includes('[?]');
 }
 
-export const getCountedTags = (projects: Project[]): [Record<string, number>, Record<string, number>, Record<string, number>, Record<string, number>] => {
+
+
+export const getCountedTags = (projects: Project[], dateFilter: number | undefined): [Record<string, number>, Record<string, number>, Record<string, number>, Record<string, number>] => {
   const pendingTagsCount: Record<string, number> = {};
   const doneTagsCount: Record<string, number> = {};
   const incubatedTagsCount: Record<string, number> = {};
@@ -173,7 +176,9 @@ export const getCountedTags = (projects: Project[]): [Record<string, number>, Re
       overallTags[tag] = (overallTags[tag] ?? 0) + 1;
 
       if (isProjectDone(project)) {
-        doneTagsCount[tag] = (doneTagsCount[tag] ?? 0) + 1;
+        if (isDoneDate(dateFilter, project.done)) {
+          doneTagsCount[tag] = (doneTagsCount[tag] ?? 0) + 1;
+        }
       } else if (isProjectIncubated(project)) {
         incubatedTagsCount[tag] = (incubatedTagsCount[tag] ?? 0) + 1;
       } else {
@@ -192,8 +197,8 @@ export const getSortedTags = (tagCount: Record<string, number>): string[] => {
     .map(([tag]) => tag);
 };
 
-export const getTagsAndCount = (projects: Project[]): [string[], Record<string, number>, Record<string, number>, Record<string, number>, Record<string, number>] => {
-  const [pendingTagsCount, doneTagsCount, incubatedTagsCount, overallTags] = getCountedTags(projects);
+export const getTagsAndCount = (projects: Project[], dateFilter: number | undefined): [string[], Record<string, number>, Record<string, number>, Record<string, number>, Record<string, number>] => {
+  const [pendingTagsCount, doneTagsCount, incubatedTagsCount, overallTags] = getCountedTags(projects, dateFilter);
   const tags = getSortedTags(pendingTagsCount);
   return [tags, pendingTagsCount, doneTagsCount, incubatedTagsCount, overallTags];
 };

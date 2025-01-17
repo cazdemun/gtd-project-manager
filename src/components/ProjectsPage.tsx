@@ -4,9 +4,11 @@ import React, { useState } from "react";
 import { useSelector } from "@xstate/react";
 import { FloatingButton, Button } from "@/app/ui";
 import { ProjectActor, SourceActor } from "@/app/resources";
+import { isDoneDate } from "@/utils/dates";
 import ProjectView from "./ProjectView";
 import { getTagsAndCount, isProjectDone, isProjectIncubated } from "@/utils";
 import ProjectUpdateModal from "./ProjectUpdateModal";
+import LinealDatePicker from "./LinealDatePicker";
 
 import "@/styles/common.scss"
 
@@ -148,7 +150,8 @@ type ProjectsPageProps = object
 
 const ProjectsPage: React.FC<ProjectsPageProps> = () => {
   const projects = useSelector(ProjectActor, ({ context }) => context.resources);
-  const [tags, pendingTags, doneTags, incubatedTags, overallTags] = getTagsAndCount(projects);
+  const [dateFilter, setDateFilter] = useState<number | undefined>(undefined);
+  const [tags, pendingTags, doneTags, incubatedTags, overallTags] = getTagsAndCount(projects, dateFilter);
 
   const [doneFilter, setDoneFilter] = useState<ProgressFilterState>(doneFilterStates['pending']);
   const [tagFilter, setTagFilter] = useState<TagFilterState>(tagFilterStates['tagless']);
@@ -168,7 +171,12 @@ const ProjectsPage: React.FC<ProjectsPageProps> = () => {
     }
   }
 
-  const filteredProjects = projects
+  const commonFilteredProjects = projects
+    .filter((project) => isProgressState(doneFilter.state, project))
+    .filter((project) => isDoneDate(dateFilter, project.done))
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  const filteredProjects = commonFilteredProjects
     .filter((project) => {
       if (tagFilter.state === 'all') {
         return true;
@@ -178,12 +186,8 @@ const ProjectsPage: React.FC<ProjectsPageProps> = () => {
         return project.tags.length > 0;
       }
     })
-    .filter((project) => isProgressState(doneFilter.state, project))
-    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-  const tagSelectedProjects = projects
-    .filter((project) => isProgressState(doneFilter.state, project))
-    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+  const tagSelectedProjects = commonFilteredProjects
     .filter((project) => {
       if (tagSelected === undefined) {
         return false;
@@ -224,6 +228,12 @@ const ProjectsPage: React.FC<ProjectsPageProps> = () => {
           <TagFilterStateButtons currentFilter={tagFilter} onClick={setTagFilter} />
           <span>Progress status:</span>
           <DoneFilterStateButtons currentFilter={doneFilter} onClick={setDoneFilter} />
+          {doneFilter.state === 'done' && (
+            <>
+              <span>Done date:</span>
+              <LinealDatePicker initialValue={dateFilter} onValueChange={setDateFilter} />
+            </>
+          )}
         </div>
       </div>
       <hr />
