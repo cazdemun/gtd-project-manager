@@ -32,6 +32,14 @@ const ProjectUpdateModal: React.FC<ProjectUpdateModalProps> = () => {
     ProjectActor.send({ type: 'UPDATE', updatedResources: updatedProject, afterUpdate: closeModal });
   };
 
+  const deleteProject = () => {
+    const confirmation = window.confirm('Are you sure you want to delete this project?');
+    if (confirmation && selectedProject) {
+      console.log('Deleting project: ', selectedProject);
+      ProjectActor.send({ type: 'DELETE', resourceIds: [selectedProject._id,], afterDelete: closeModal });
+    }
+  }
+
   return (
     <Modal
       visible={projectUpdateModal}
@@ -39,6 +47,7 @@ const ProjectUpdateModal: React.FC<ProjectUpdateModalProps> = () => {
       footer={
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
           <Button onClick={updateProject} loading={loading}>Update</Button>
+          <Button onClick={deleteProject} loading={loading}>Delete</Button>
           <button onClick={closeModal}>Cancel</button>
         </div>
       }
