@@ -9,7 +9,7 @@ export interface TextJsonRepositoryOptions<T extends U, U extends Resource> {
    * 
    * We do this because a json resource could have extra metadata that is not present in the text resource when they are created.
    */
-  expandTextResources: (textResourcesToCreate: U[], jsonResources: T[]) => T[];
+  adaptTextResources: (textResourcesToCreate: U[], jsonResources: T[]) => T[];
 }
 
 export default class TextJsonRepository<T extends U, U extends Resource> extends BaseRepository<T> {
@@ -56,12 +56,12 @@ export default class TextJsonRepository<T extends U, U extends Resource> extends
       // We filter `textResources` as it contains new resources that are not in the json file
       // User expanded resources helps when new properties are added so we updated the already existing resources
       const resourcesToUpdate = textResources.filter((textRes) => this.isIn(jsonResources, textRes));
-      const expandedResourcesToUpdate = this.options.expandTextResources(resourcesToUpdate, jsonResourcesAfterDelete);
+      const expandedResourcesToUpdate = this.options.adaptTextResources(resourcesToUpdate, jsonResourcesAfterDelete);
       const [jsonResourcesAfterUpdate] = _updateMany(jsonResourcesAfterDelete, expandedResourcesToUpdate);
 
       // Create resources that are in the text file but not in the json file
       const resourcesToCreate = textResources.filter((textRes) => !this.isIn(jsonResourcesAfterUpdate, textRes))
-      const expandedResourcesToCreate = this.options.expandTextResources(resourcesToCreate, jsonResourcesAfterUpdate);
+      const expandedResourcesToCreate = this.options.adaptTextResources(resourcesToCreate, jsonResourcesAfterUpdate);
       const jsonResourcesAfterCreate = _create(jsonResourcesAfterUpdate, expandedResourcesToCreate);
 
       await this.jsonRepository._saveResources(jsonResourcesAfterCreate);

@@ -1,153 +1,39 @@
 import { v4 as uuidv4 } from 'uuid';
-import { isDoneDate } from './dates';
-
-// https://www.regular-expressions.info/conditional.html
-// https://stackoverflow.com/questions/39222950/regular-expression-with-if-condition
-// - A project always starts with a title, which is a line starting with a hyphen.
-// - We capture everything lazily until we finish the ID. 
-// - If there is no ID, we capture until the start of the next project or the end of the file.
-export const RAW_PROJECT_REGEX = /^- .*?(?:(?=<!--ID: [a-f0-9-]{36}-->$)<!--ID: [a-f0-9-]{36}-->$|(?=^-|<<END>>))/gms;
-
-const RAW_PROJECT_UUID_REGEX = /<!--ID: ([a-f0-9-]{36})-->$/;
-const RAW_PROJECT_TITLE_REGEX = /^-.*?$/gms;
-const RAW_PROJECT_ACTIONS_REGEX = /^[ \t]+-.*?$/gms;
-const RAW_PROJECT_DESCRIPTION_REGEX = /(?:^[ \t]*-.*?\n)+(.*?)(?=^<!--ID:|^#)/gms;
-const RAW_PROJECT_TAGS_REGEX = /^#.*?(?=^<!--ID:)/gms;
+import { isAfterByDay, isBeforeByDay, isDoneDate } from './dates';
+import { addDays, isToday } from 'date-fns';
+import { RAW_PROJECT_REGEX } from './constants';
 
 export function isNullish<T>(value: T | null | undefined): value is null | undefined {
   return value === null || value === undefined;
 }
 
-export function getRawProjects(rawText: string): string[] {
-  return rawText.match(RAW_PROJECT_REGEX) ?? [];
+/**
+ * 
+ * @param text 
+ * @returns 
+ */
+export function getPotentialTextResources(text: string): string[] {
+  return text.match(RAW_PROJECT_REGEX) ?? [];
 }
 
 /**
- * Adds an identifier to a the end of a raw project string.
+ * Adds an identifier to the end of a potential text project.
  * 
- * This function is part of a processing pipeline where:
- * - The raw project ends in a new line if it does not contain an identifier.
- * - The raw project ends at the end of the line where the identifier is located.
+ * The regex for identifiying a project is based on the following rules:
+ * - If there is no identifier, the text project ends in a new line before a new project starts.
+ * - If there is a identifier, the text project ends at the end of the identifier.
  * 
- * Based on this, the returned value will never have a new line at the end.
+ * Based on this, the normalized text will never have a new line at the end.
+ * 
+ * @param text 
+ * @returns 
  */
-export function insertIdentifierToRawProject(rawProject: string): string {
+export function normalizePotentialTextResource(text: string): string {
   const uuidRegex = /<!--ID: [a-f0-9-]{36}-->/;
-  if (!uuidRegex.test(rawProject)) {
-    return `${rawProject}<!--ID: ${uuidv4()}-->`;
+  if (!uuidRegex.test(text)) {
+    return `${text}<!--ID: ${uuidv4()}-->`;
   }
-  return `${rawProject}`;
-}
-
-export function convertRawProjectsToRawText(rawProjects: string[]): string {
-  const updatedRawText = `${rawProjects.join('\n')}\n<<END>>`;
-  return updatedRawText;
-}
-
-/**
- * Load a project from a text string.
- * 
- * This function is part of a processing pipeline that assumes the raw project string contains 
- * an ID at the final line. If the ID is not found, the function will return undefined. For this
- * schema, if the title is not found either, the function will return undefined, as is the minimal
- * information required to create a project.
- * 
- * @param rawProject - The raw project string.
- * @returns The project or undefined if there is no ID detected.
- * @example
- * loadProjectFromRawProject(`
- * - Title
- *  - Task 1
- *  - Task 2
- * 
- * Additional description.
- * 
- * #tag1 #tag2
- * <!--ID: 123e4567-e89b-12d3-a456-426614174000-->`)`
- * 
- * // Returns: {
- * //   _id: '123e4567-e89b-12d3-a456-426614174000',
- * //   rawText: `...`,
- * //   title: 'Title',
- * //   description: 'Description',
- * //   actions: ['- Task 1', '- Task 2'],
- * //   tags: ['#tag1', '#tag2'],
- * // }
- */
-export function textToTextProject(text: string): TextProject | undefined {
-  const idMatch = text.match(RAW_PROJECT_UUID_REGEX);
-  const _id = idMatch ? idMatch[1] : '';
-
-  if (!_id) return undefined;
-
-  const titleMatch = text.match(RAW_PROJECT_TITLE_REGEX);
-  const _title = titleMatch ? (titleMatch[0] ?? '') : '';
-  const title = _title?.trim() ?? '';
-
-  if (title === '') return undefined;
-
-  const actionsMatch = text.match(RAW_PROJECT_ACTIONS_REGEX);
-  const actions: string[] = (actionsMatch ?? [])
-    .map((action) => action.trim());
-
-  const descriptionMatch = [...text.matchAll(RAW_PROJECT_DESCRIPTION_REGEX)][0];
-  const _description = descriptionMatch ? descriptionMatch[1] : '';
-  const description = _description?.trim() ?? '';
-
-  const tagsMatch = text.match(RAW_PROJECT_TAGS_REGEX)
-  const _tags = tagsMatch ? tagsMatch[0] : '';
-  const tags = (_tags ?? '').trim().split(' ')
-    .filter((tag) => tag !== '')
-    .filter((tag) => tag.startsWith('#'));
-
-  return {
-    _id,
-    rawProject: text,
-    title,
-    actions,
-    description,
-    tags,
-  };
-}
-
-export function textProjectToText(project: TextProject): string {
-  // project content
-  const actions = project.actions.map((action) => `\t${action}`).join('\n');
-  const titleActionsSeparator = actions.length > 0 ? '\n' : '';
-  const projectContent = `${project.title}${titleActionsSeparator}${actions}`;
-  // project reference
-  const contentReferenceSeparator = project.description.length > 0 ? '\n\n' : '';
-  const projectReference = `${contentReferenceSeparator}${project.description}`;
-  // project metadata
-  const tags = project.tags.join(' ');
-  const tagsIdSeparator = tags.length > 0 ? '\n' : '';
-  const projectMetadata = `\n\n${tags}${tagsIdSeparator}<!--ID: ${project._id}-->`
-
-  return `${projectContent}${projectReference}${projectMetadata}`;
-}
-
-export function textProjectsToText(projects: Project[]): string {
-  return projects.map(textProjectToText).join('\n\n') + '\n<<END>>';
-}
-
-function isTextProjectPeriodic(textProject: TextProject): boolean {
-  return textProject.title.match(/- .*?#periodic/) !== null;
-}
-
-function textProjectToProject(textProject: TextProject, projectsMap: Map<string, Project>, newOrder: number): Project {
-  const order = projectsMap.get(textProject._id)?.order ?? newOrder;
-  return {
-    ...textProject,
-    order: order,
-    periodic: isTextProjectPeriodic(textProject),
-  };
-}
-
-export function textProjectsToProjects(textProjects: TextProject[], projects: Project[]): Project[] {
-  const lastOrder = projects.reduce((acc, resource) => Math.max(acc, (resource as { order?: number })?.order ?? 0), 0)
-  const projectsMap = new Map(projects.map((project) => [project._id, project]));
-  const projectsToCreate = textProjects.map((textProject, index) => textProjectToProject(textProject, projectsMap, lastOrder + index + 1));
-  return projectsToCreate;
+  return `${text}`;
 }
 
 // --- Project Utils ---
@@ -192,13 +78,93 @@ export const getCountedTags = (projects: Project[], dateFilter: number | undefin
 };
 
 export const getSortedTags = (tagCount: Record<string, number>): string[] => {
+  const predefinedOrder = ['#today', '#week', '#month', "#trimester"];
   return Object.entries(tagCount)
     .sort(([, countA], [, countB]) => countB - countA)
+    .sort(([tagA], [tagB]) => {
+      const indexA = predefinedOrder.indexOf(tagA);
+      const indexB = predefinedOrder.indexOf(tagB);
+      if (indexA === -1 && indexB === -1) return 0; // Both tags are not in predefinedOrder
+      if (indexA === -1) return 1; // tagA is not in predefinedOrder, tagB comes first
+      if (indexB === -1) return -1; // tagB is not in predefinedOrder, tagA comes first
+      return indexA - indexB; // Both tags are in predefinedOrder, sort by predefinedOrder
+    })
     .map(([tag]) => tag);
 };
 
-export const getTagsAndCount = (projects: Project[], dateFilter: number | undefined): [string[], Record<string, number>, Record<string, number>, Record<string, number>, Record<string, number>] => {
+export const getTagsAndCount = (projects: Project[], dateFilter?: number | undefined): [string[], Record<string, number>, Record<string, number>, Record<string, number>, Record<string, number>] => {
   const [pendingTagsCount, doneTagsCount, incubatedTagsCount, overallTags] = getCountedTags(projects, dateFilter);
   const tags = getSortedTags(pendingTagsCount);
   return [tags, pendingTagsCount, doneTagsCount, incubatedTagsCount, overallTags];
 };
+
+
+// Periodic Projects Utils
+
+export const getLastRecord = (project: Project, records: DoneRecord[]): DoneRecord | undefined => {
+  return records
+    .filter((record) => record.projectId === project._id)
+    .sort((a, b) => b.date - a.date)
+    .at(0);
+}
+
+export function isPeriodicDoneToday(project: Project, records: DoneRecord[]): boolean {
+  const lastRecord = getLastRecord(project, records);
+  if (lastRecord === undefined) return false;
+  return isToday(lastRecord.date);
+}
+
+export const getNextDate = (project: Project, records: DoneRecord[]): number | undefined => {
+  if (!project.periodic) return undefined;
+  if (!project.periodicData) return undefined;
+
+  const scheduled = project.periodicData.scheduled;
+  const period = project.periodicData.period;
+  const noPeriod = period === undefined || period === null || period < 1;
+  const isDoneToday = isPeriodicDoneToday(project, records);
+
+  // TODO: Case when schedule was done before today
+  // Scheduled day takes priority over every other calculation
+  // If scheduled date is expired but there is no period, return the expired scheduled date, that way we can calculate past due projects
+  // We should ignore the scheduled also if the project was already done that day
+  if (scheduled && !isDoneToday) {
+    const isScheduledExpired = isBeforeByDay(scheduled, new Date());
+    if (!isScheduledExpired) return scheduled;
+    if (isScheduledExpired && noPeriod) return scheduled;
+  }
+
+  // With no schedule nor a valid period, we return undefined
+  if (noPeriod) return undefined;
+
+  const lastRecord = getLastRecord(project, records);
+
+  // With no record we can't calculate the next date even if we have a period
+  if (!lastRecord) return undefined;
+
+  return addDays(lastRecord.date, period).getTime();
+}
+
+export const isPeriodicUncategorized = (project: Project, records: DoneRecord[]): boolean => {
+  const nextDate = getNextDate(project, records);
+  return nextDate === undefined;
+}
+
+export const isPeriodicFuture = (project: Project, records: DoneRecord[]): boolean => {
+  const nextDate = getNextDate(project, records);
+  if (nextDate === undefined) return false;
+  return isAfterByDay(nextDate, new Date());
+}
+
+export const isPeriodicToday = (project: Project, records: DoneRecord[]): boolean => {
+  const isDoneToday = isPeriodicDoneToday(project, records);
+  if (isDoneToday) return false;
+  const nextDate = getNextDate(project, records);
+  if (nextDate === undefined) return false;
+  return isToday(nextDate);
+}
+
+export const isPeriodicPastDue = (project: Project, records: DoneRecord[]): boolean => {
+  const nextDate = getNextDate(project, records);
+  if (nextDate === undefined) return false;
+  return isBeforeByDay(nextDate, new Date());
+}

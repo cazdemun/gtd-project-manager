@@ -37,6 +37,7 @@ export default class TextRepository<T extends Resource> extends BaseRepository<T
     this._ensureFileExists(filePath);
   }
 
+  // We override the create method to optmize the read operation
   public override async create(newResources: NewResource<T> | NewResource<T>[]): Promise<T[]> {
     const text = await this._readFile();; // optimization
     const resources = await this._loadResources({ text });
