@@ -3,8 +3,12 @@ import { AiOutlineMenu } from 'react-icons/ai';
 import { SourceActor } from '@/app/resources';
 import { useSelector } from '@xstate/react';
 import Sidebar from './Sidebar';
+import { AppActor, MachineEvent as AppMachineEvent } from '@/app/machines/appMachine';
+import { Row } from '@/app/ui';
 
 import "./Header.scss";
+
+type EventType = AppMachineEvent['type'];
 
 type HeaderProps = object
 
@@ -13,6 +17,10 @@ const Header: React.FC<HeaderProps> = () => {
 
   const sources = useSelector(SourceActor, ({ context }) => context.resources);
   const currentSource = sources.find((source) => source.selected);
+
+  const isProjectsPage = useSelector(AppActor, (state) => state.matches('projectsPage'));
+  const isPeriodicProjectsPage = useSelector(AppActor, (state) => state.matches('periodicProjectsPage'));
+  const isGptPage = useSelector(AppActor, (state) => state.matches('gptPage'));
 
   const showSidebar = () => {
     setSidebarVisible(true);
@@ -23,24 +31,35 @@ const Header: React.FC<HeaderProps> = () => {
     setSidebarVisible(false);
   }
 
+  const HeaderElement = ({ selected, value, text, disabled }: { selected: boolean, value: EventType, text: string, disabled?: boolean }) => {
+    const cursor = disabled ? 'not-allowed' : selected ? 'default' : 'pointer';
+    const color = disabled ? 'gray' : 'white';
+    const goPage = () => AppActor.send({ type: value });
+    return (
+      <span
+        style={{ cursor, color }}
+        onClick={() => !disabled && goPage()}
+      >
+        {selected ? <strong>{text}</strong> : text}
+      </span>
+    );
+  }
+
   return (
-    <div className="header">
-      <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+    <header className="header">
+      <Row centerY gap={20}>
         <AiOutlineMenu style={{ cursor: 'pointer' }} onClick={showSidebar} />
-        {currentSource && <span>{currentSource.title}</span>}
-        {!currentSource && <span>[No source]</span>}
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <span style={{ cursor: 'pointer' }}><strong>Projects</strong></span>
-          <hr />
-          <span style={{ cursor: 'pointer', color: 'gray' }}>Periodic Projects</span>
-          <hr />
-          <span style={{ cursor: 'pointer', color: 'gray' }}>Explorer</span>
-          <hr />
-          <span style={{ cursor: 'pointer', color: 'gray' }}>GTD</span>
-        </div>
-      </div>
+        {currentSource && <span>{currentSource ? currentSource.title : '[No source selected]'}</span>}
+        <Row centerY gap={10}>
+          <HeaderElement selected={isProjectsPage} value="GO_PROJECTS" text="Projects" />
+          <hr style={{ alignSelf: 'stretch' }} />
+          <HeaderElement selected={isPeriodicProjectsPage} value="GO_PERIODIC_PROJECTS" text="Periodic Projects" />
+          <hr style={{ alignSelf: 'stretch' }} />
+          <HeaderElement selected={isGptPage} value="GO_GPT" text="GPT" disabled />
+        </Row>
+      </Row>
       <Sidebar visible={sidebarVisible} onClose={hideSidebar} />
-    </div>
+    </header >
   );
 };
 
