@@ -9,7 +9,7 @@ type PopoverCoordinates = {
 
 type PopoverProps = {
   children: ReactNode;
-  content: ReactNode;
+  content?: ReactNode;
 }
 
 // TODO: Design popover behaviour for mobile devices
@@ -18,6 +18,7 @@ const Popover: React.FC<PopoverProps> = ({ children, content }) => {
   const [position, setPosition] = useState<PopoverCoordinates>({ top: 0, left: 0 });
   const triggerRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
+  const showPopover = isHovered && content !== undefined && content !== null;
 
   useEffect(() => {
     if (isHovered && triggerRef.current && popoverRef.current) {
@@ -27,10 +28,10 @@ const Popover: React.FC<PopoverProps> = ({ children, content }) => {
       // If there is no overflow, position the popover on top right (TR) of the trigger
       const topPositionT = triggerRect.bottom - triggerRect.height - popoverRect.height;
       const leftPositionR = triggerRect.left + triggerRect.width / 2;
-      
+
       const doesTopPositionTOverflows = topPositionT < 0;
       const doesLeftPositionROverflows = leftPositionR + popoverRect.width > window.innerWidth;
-      
+
       // If both sides overflow, position the popover on bottom left (BL) of the trigger.
       // If only one overflows, position the popover on the opposite side of the overflow (TL or BR).
       // If even then it overflows then the windows is too small or the popover too big.
@@ -70,7 +71,7 @@ const Popover: React.FC<PopoverProps> = ({ children, content }) => {
       className="popover-container"
     >
       {children}
-      {isHovered && <PopoverContent />}
+      {showPopover && <PopoverContent />}
     </div>
   );
 };
