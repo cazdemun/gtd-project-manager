@@ -2,13 +2,14 @@
 
 import React, { useState } from "react";
 import { useSelector } from "@xstate/react";
-import { FloatingButton, Button } from "@/app/ui";
-import { ProjectActor, SourceActor } from "@/app/resources";
+import { Button } from "@/app/ui";
+import { ProjectActor, RecordActor, SourceActor } from "@/app/resources";
+import { AppActor } from "@/app/machines/appMachine";
 import { isDoneDate } from "@/utils/dates";
 import ProjectView from "./ProjectView";
-import { getTagsAndCount, isProjectDone, isProjectIncubated } from "@/utils";
-import ProjectUpdateModal from "./ProjectUpdateModal";
+import { getTagsAndCount, isProjectDone, isProjectIncubated, isProjectPending } from "@/utils";;
 import LinealDatePicker from "./LinealDatePicker";
+import BulkOperationsBar from "./BulkOperationsBar";
 
 import "@/styles/common.scss"
 
@@ -64,10 +65,24 @@ const isProgressState = (state: ProgressFilterState['state'], project: Project):
   } else if (state === 'incubated') {
     return isProjectIncubated(project);
   } else if (state === 'pending') {
-    return !(isProjectDone(project) || isProjectIncubated(project));
+    return isProjectPending(project);
   }
   return false;
 }
+
+const getProjectsLength = (state: ProgressFilterState['state'], projects: Project[]): number => {
+  if (state === 'all') {
+    return projects.length;
+  } else if (state === 'done') {
+    return projects.filter(isProjectDone).length;
+  } else if (state === 'incubated') {
+    return projects.filter(isProjectIncubated).length;
+  } else if (state === 'pending') {
+    return projects.filter(isProjectPending).length;
+  }
+  return projects.length;
+}
+
 
 type DoneFilterStateButtonsProps = {
   currentFilter: ProgressFilterState;
@@ -75,6 +90,7 @@ type DoneFilterStateButtonsProps = {
 };
 
 const DoneFilterStateButtons: React.FC<DoneFilterStateButtonsProps> = ({ currentFilter, onClick }) => {
+  const projects = useSelector(ProjectActor, ({ context }) => context.resources);
   return (
     <>
       {Object.values(doneFilterStates).map((filterState) => (
@@ -83,7 +99,7 @@ const DoneFilterStateButtons: React.FC<DoneFilterStateButtonsProps> = ({ current
           onClick={() => onClick(filterState)}
           disabled={filterState.disabled}
         >
-          {`${filterState.label} ${currentFilter.state === filterState.state ? '(✔)' : ''}`}
+          {`${filterState.label} (${getProjectsLength(filterState.state, projects)}) ${currentFilter.state === filterState.state ? '✔' : ''}`}
         </button>
       ))}
     </>
@@ -111,6 +127,7 @@ const ProjectsList: React.FC<ProjectsListProps> = ({ projects, collapsed, onHide
   const loadProjects = () => {
     SourceActor.send({ type: 'FETCH' })
     ProjectActor.send({ type: 'FETCH' })
+    RecordActor.send({ type: 'FETCH' })
   }
 
   if (collapsed) {
@@ -150,6 +167,7 @@ type ProjectsPageProps = object
 
 const ProjectsPage: React.FC<ProjectsPageProps> = () => {
   const projects = useSelector(ProjectActor, ({ context }) => context.resources);
+
   const [dateFilter, setDateFilter] = useState<number | undefined>(undefined);
   const [tags, pendingTags, doneTags, incubatedTags, overallTags] = getTagsAndCount(projects, dateFilter);
 
@@ -158,6 +176,13 @@ const ProjectsPage: React.FC<ProjectsPageProps> = () => {
 
   const [tagSelected, setTagSelected] = useState<string | undefined>(undefined);
   const [collapsedList, setCollapsedList] = useState(false);
+
+  const selectMode = useSelector(AppActor, (state) => state.matches({ projectsPage: 'select' }));
+  const selectedProjects = useSelector(AppActor, (state) => state.context.selectedProjectIds);
+
+  const handleProjectSelect = (projectId: string) => {
+    AppActor.send({ type: 'SELECT_PROJECT', projectId });
+  };
 
   const getTagNumberByProgress = (tag: string, progress: ProgressFilterState['state']): number => {
     if (progress === 'done') {
@@ -221,6 +246,7 @@ const ProjectsPage: React.FC<ProjectsPageProps> = () => {
   return (
     <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <BulkOperationsBar />
         <h2>Filters</h2>
         <hr />
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -249,11 +275,26 @@ const ProjectsPage: React.FC<ProjectsPageProps> = () => {
         {collapsedList && <hr />}
         <div style={{ flex: 2, overflow: 'auto' }}>
           <Tabs />
-          {tagSelectedProjects.map((project, i) => (<ProjectView key={i} project={project} orderInfo={tagSelectedProjectsOrderInfo} showHeaderTags />))}
+          {tagSelectedProjects.map((project, i) => (
+            selectMode ? (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <input
+                  type="checkbox"
+                  checked={selectedProjects.some((_id) => _id === project._id)}
+                  onChange={() => handleProjectSelect(project._id)}
+                />
+                <div>
+                  <span>{project.title}</span>
+                  <span>{" "}</span>
+                  <span>{project.tags.join(', ')}</span>
+                </div>
+              </div>
+            ) : (
+              <ProjectView key={i} project={project} orderInfo={tagSelectedProjectsOrderInfo} showHeaderTags />
+            )
+          ))}
         </div>
       </div>
-      <FloatingButton />
-      <ProjectUpdateModal />
     </div >
   );
 }

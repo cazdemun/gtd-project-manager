@@ -46,7 +46,13 @@ export function isProjectIncubated(project: Project): boolean {
   return project.title.includes('[?]');
 }
 
+export function isProjectPending(project: Project): boolean {
+  return !isProjectDone(project) && !isProjectIncubated(project);
+}
 
+export function extracTitleText(title: string): string {
+  return title.replaceAll(/^- \[x\]|^- \[X\]|^- \[ \]|^- \[\?\]|^- /g, '').trim();
+}
 
 export const getCountedTags = (projects: Project[], dateFilter: number | undefined): [Record<string, number>, Record<string, number>, Record<string, number>, Record<string, number>] => {
   const pendingTagsCount: Record<string, number> = {};
