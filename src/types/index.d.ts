@@ -35,3 +35,12 @@ type DoneRecord = {
   projectId: string;
   date: number;
 }
+
+/**
+ * Utility type used for swapping the order of two projects that are grouped by tag.
+ */
+type OrderInfo = {
+  _id: string;
+  order: number | undefined;
+  index: number;
+}

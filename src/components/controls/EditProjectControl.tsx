@@ -2,7 +2,7 @@ import { AiOutlineEdit } from "react-icons/ai";
 import { ProjectUIActor } from "@/app/resources";
 import BaseControl from "./BaseControl";
 
-type EditProjectControlProps = BaseControlProps;
+type EditProjectControlProps = BaseProjectControlProps;
 
 const EditProjectControl: React.FC<EditProjectControlProps> = ({ project, show }) => {
   const openModal = () => {

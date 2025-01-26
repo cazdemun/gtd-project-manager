@@ -2,7 +2,7 @@ import { AiOutlineCopy } from "react-icons/ai";
 import { textProjectToText } from "@/utils/repository";
 import BaseControl from "./BaseControl";
 
-type CopyPasteControlProps = BaseControlProps;
+type CopyPasteControlProps = BaseProjectControlProps;
 
 const CopyPasteControl: React.FC<CopyPasteControlProps> = ({ project, show }) => {
   const copyToClipboard = () => {

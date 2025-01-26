@@ -2,7 +2,7 @@ import { AiOutlineDelete } from "react-icons/ai";
 import { ProjectActor } from "@/app/resources";
 import BaseControl from "./BaseControl";
 
-type DeleteProjectControlProps = BaseControlProps;
+type DeleteProjectControlProps = BaseProjectControlProps;
 
 const DeleteProjectControl: React.FC<DeleteProjectControlProps> = ({ project, show }) => {
   const deleteProject = () => {
