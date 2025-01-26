@@ -5,6 +5,7 @@ import { extracTitleText } from "@/utils";
 import styles from "./BaseProjectCard.module.scss";
 
 type BaseProjectCardProps = {
+  className?: string;
   children?: React.ReactNode;
   title?: React.ReactNode;
   project: Project;
@@ -14,11 +15,11 @@ type BaseProjectCardProps = {
   popOverControls?: React.ReactNode[] | React.ReactNode;
 }
 
-export const BaseProjectCard: React.FC<BaseProjectCardProps> = ({ children, title, project, content, controls, popOverContent, popOverControls }) => {
+export const BaseProjectCard: React.FC<BaseProjectCardProps> = ({ className: _className, children, title, project, content, controls, popOverContent, popOverControls }) => {
   const [showDetails, setShowDetails] = useState(false);
 
   const titleText = extracTitleText(project.title);
-
+  const className = _className ?? '';
   const showPopOver = !!popOverContent || !!popOverControls;
 
   const CardHeader = () => (
@@ -43,7 +44,7 @@ export const BaseProjectCard: React.FC<BaseProjectCardProps> = ({ children, titl
   );
 
   return (
-    <Col className={styles['project-card']} gap={10}>
+    <Col className={`${styles['project-card']} ${className}`} gap={10}>
       {children ? children : <CardHeader />}
       {showDetails && content}
     </Col>

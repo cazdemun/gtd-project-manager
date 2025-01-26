@@ -2,14 +2,15 @@
 
 import React, { useState } from "react";
 import { useSelector } from "@xstate/react";
-import { Button } from "@/app/ui";
+import { Button, Row } from "@/app/ui";
 import { ProjectActor, RecordActor, SourceActor } from "@/app/resources";
 import { AppActor } from "@/app/machines/appMachine";
 import { isDoneDate } from "@/utils/dates";
-import ProjectView from "./ProjectView";
 import { getTagsAndCount, isProjectDone, isProjectIncubated, isProjectPending } from "@/utils";;
 import LinealDatePicker from "./LinealDatePicker";
 import BulkOperationsBar from "./BulkOperationsBar";
+import ProjectCard from "./ProjectCard";
+import BaseProjectCard from "./BaseProjectCard";
 
 import "@/styles/common.scss"
 
@@ -157,7 +158,7 @@ const ProjectsList: React.FC<ProjectsListProps> = ({ projects, collapsed, onHide
       </div>
       <hr />
       <div>
-        {projects.map((project, i) => (<ProjectView key={i} project={project} showHeaderTags />))}
+        {projects.map((project, i) => (<ProjectCard key={i} project={project} showCardHeaderTags />))}
       </div>
     </div>
   );
@@ -277,21 +278,19 @@ const ProjectsPage: React.FC<ProjectsPageProps> = () => {
           <Tabs />
           {tagSelectedProjects.map((project, i) => (
             selectMode ? (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <input
-                  type="checkbox"
-                  checked={selectedProjects.some((_id) => _id === project._id)}
-                  onChange={() => handleProjectSelect(project._id)}
-                />
-                <div>
-                  <span>{project.title}</span>
-                  <span>{" "}</span>
-                  <span>{project.tags.join(', ')}</span>
-                </div>
-              </div>
-            ) : (
-              <ProjectView key={i} project={project} orderInfo={tagSelectedProjectsOrderInfo} showHeaderTags />
-            )
+              <BaseProjectCard key={i} project={project}>
+                <Row centerY gap={10}>
+                  <input
+                    type="checkbox"
+                    checked={selectedProjects.some((_id) => _id === project._id)}
+                    onChange={() => handleProjectSelect(project._id)}
+                    style={{ flex: 'none', width: 'auto' }}
+                  />
+                  <h4>{project.title}</h4>
+                  <pre>{project.tags.join(', ')}</pre>
+                </Row>
+              </BaseProjectCard>
+            ) : (<ProjectCard key={i} project={project} orderInfos={tagSelectedProjectsOrderInfo} showCardHeaderTags />)
           ))}
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { isAfterByDay, isBeforeByDay, isDoneDate } from './dates';
-import { addDays, isToday } from 'date-fns';
+import { addDays, differenceInDays, isToday, startOfDay } from 'date-fns';
 import { RAW_PROJECT_REGEX } from './constants';
 
 export function isNullish<T>(value: T | null | undefined): value is null | undefined {
@@ -50,7 +50,8 @@ export function isProjectPending(project: Project): boolean {
   return !isProjectDone(project) && !isProjectIncubated(project);
 }
 
-export function extracTitleText(title: string): string {
+export function extracTitleText(title: string, filterPeriodic: boolean = false): string {
+  if (filterPeriodic) return title.replaceAll(/^- \[x\]|^- \[X\]|^- \[ \]|^- \[\?\]|^- |#periodic/g, '').trim();
   return title.replaceAll(/^- \[x\]|^- \[X\]|^- \[ \]|^- \[\?\]|^- /g, '').trim();
 }
 
@@ -114,7 +115,13 @@ export const getLastRecord = (project: Project, records: DoneRecord[]): DoneReco
     .at(0);
 }
 
-export function isPeriodicDoneToday(project: Project, records: DoneRecord[]): boolean {
+export function getLastDoneDate(project: Project, records: DoneRecord[]): number | undefined {
+  const lastRecord = getLastRecord(project, records);
+  if (lastRecord === undefined) return undefined;
+  return lastRecord.date;
+}
+
+export function wasPeriodicDoneToday(project: Project, records: DoneRecord[]): boolean {
   const lastRecord = getLastRecord(project, records);
   if (lastRecord === undefined) return false;
   return isToday(lastRecord.date);
@@ -127,7 +134,7 @@ export const getNextDate = (project: Project, records: DoneRecord[]): number | u
   const scheduled = project.periodicData.scheduled;
   const period = project.periodicData.period;
   const noPeriod = period === undefined || period === null || period < 1;
-  const isDoneToday = isPeriodicDoneToday(project, records);
+  const isDoneToday = wasPeriodicDoneToday(project, records);
 
   // TODO: Case when schedule was done before today
   // Scheduled day takes priority over every other calculation
@@ -150,6 +157,13 @@ export const getNextDate = (project: Project, records: DoneRecord[]): number | u
   return addDays(lastRecord.date, period).getTime();
 }
 
+export function daysFromToday(nextDate: number | undefined): number | undefined {
+  if (nextDate === undefined) return undefined;
+  const dateA = startOfDay(nextDate);
+  const dateB = startOfDay(new Date());
+  return differenceInDays(dateA, dateB);
+}
+
 export const isPeriodicUncategorized = (project: Project, records: DoneRecord[]): boolean => {
   const nextDate = getNextDate(project, records);
   return nextDate === undefined;
@@ -162,7 +176,7 @@ export const isPeriodicFuture = (project: Project, records: DoneRecord[]): boole
 }
 
 export const isPeriodicToday = (project: Project, records: DoneRecord[]): boolean => {
-  const isDoneToday = isPeriodicDoneToday(project, records);
+  const isDoneToday = wasPeriodicDoneToday(project, records);
   if (isDoneToday) return false;
   const nextDate = getNextDate(project, records);
   if (nextDate === undefined) return false;
