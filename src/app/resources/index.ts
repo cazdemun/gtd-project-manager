@@ -8,3 +8,6 @@ ProjectUIActor.start();
 
 export const SourceActor = createResourceActor<Source>('sources');
 SourceActor.start();
+
+export const RecordActor = createResourceActor<DoneRecord>('records');
+RecordActor.start();
