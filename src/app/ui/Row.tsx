@@ -7,7 +7,7 @@ type RowProps = {
   reversed?: boolean;
   className?: string;
   style?: React.CSSProperties;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 };
 
 const Row: React.FC<RowProps> = ({

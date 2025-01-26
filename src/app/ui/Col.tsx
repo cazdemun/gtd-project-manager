@@ -7,7 +7,7 @@ type ColProps = {
   reversed?: boolean;
   className?: string;
   style?: React.CSSProperties;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 };
 
 const Col: React.FC<ColProps> = ({
