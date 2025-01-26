@@ -5,15 +5,20 @@ import { DATE_FORMAT } from '@/utils/dates';
 
 type LinealDatePickerProps = {
   initialValue?: number | undefined;
+  mode?: 'filter' | 'input';
   onValueChange?: (value: number | undefined) => void;
 };
 
-const isValid = (date: Date): boolean => {
+// TODO: isValid should be a configurable rule, not a hardcoded one
+const isValid = (date: Date, mode: 'filter' | 'input' = 'filter'): boolean => {
+  if (mode === 'input') {
+    return _isValid(date);
+  }
   const minDate = new Date(1990, 0, 1); // January 1, 1990
   return _isValid(date) && !isAfter(date, new Date()) && !isBefore(date, minDate);
 };
 
-const LinealDatePicker: React.FC<LinealDatePickerProps> = ({ onValueChange, initialValue = undefined }) => {
+const LinealDatePicker: React.FC<LinealDatePickerProps> = ({ onValueChange, initialValue = undefined, mode = 'filter' }) => {
   const [isInputValid, setIsInputValid] = useState(true);
   const [inputValue, setInputValue] = useState(initialValue ? format(initialValue, DATE_FORMAT) : '');
   const [numericValue, setNumericValue] = useState<number | undefined>(initialValue);
@@ -37,15 +42,15 @@ const LinealDatePicker: React.FC<LinealDatePickerProps> = ({ onValueChange, init
     }
 
     const parsedDate = parse(e.target.value, DATE_FORMAT, new Date());
-    setIsInputValid(isValid(parsedDate));
-    if (isValid(parsedDate) && parsedDate.getTime() !== numericValue) {
+    setIsInputValid(isValid(parsedDate, mode));
+    if (isValid(parsedDate, mode) && parsedDate.getTime() !== numericValue) {
       setNumericValue(parsedDate.getTime());
     }
   };
 
   const handleInputBlur = () => {
     const parsedDate = parse(inputValue, DATE_FORMAT, new Date());
-    if (isValid(parsedDate)) {
+    if (isValid(parsedDate, mode)) {
       setNumericValue(parsedDate.getTime());
     } else {
       const oldInputValue = numericValue ? format(numericValue, DATE_FORMAT) : '';
@@ -82,7 +87,7 @@ const LinealDatePicker: React.FC<LinealDatePickerProps> = ({ onValueChange, init
     setInputValue('');
   }
 
-  const isToday = numericValue ? isSameDay(numericValue, new Date()) : false;
+  const isToday = numericValue && mode === 'filter' ? isSameDay(numericValue, new Date()) : false;
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -93,10 +98,10 @@ const LinealDatePicker: React.FC<LinealDatePickerProps> = ({ onValueChange, init
         onBlur={handleInputBlur}
         style={{ width: '100px', border: isInputValid ? '1px solid black' : '1px solid red', padding: '5px', borderRadius: '4px', textAlign: 'right' }}
       />
-      <button className="icon-button" onClick={handleGoPrev}><AiFillCaretLeft /></button>
-      <button className="icon-button" onClick={handleGoNext} disabled={isToday}><AiFillCaretRight /></button>
-      <button className="icon-button" onClick={handleResetToToday}><AiOutlineReload /></button>
-      <button className="icon-button" onClick={handleClear}><AiOutlineClear /></button>
+      <button type='button' className="icon-button" onClick={handleGoPrev}><AiFillCaretLeft /></button>
+      <button type='button' className="icon-button" onClick={handleGoNext} disabled={isToday}><AiFillCaretRight /></button>
+      <button type='button' className="icon-button" onClick={handleResetToToday}><AiOutlineReload /></button>
+      <button type='button' className="icon-button" onClick={handleClear}><AiOutlineClear /></button>
     </div>
   );
 };
