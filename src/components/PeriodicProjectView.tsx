@@ -6,7 +6,7 @@ import { getNextDate, getTagsAndCount } from "@/utils";
 import { useSelector } from "@xstate/react";
 import LinealDatePicker from "./LinealDatePicker";
 import LinealInputNumber from "./LinealInputNumber";
-import { differenceInDays, format, isSameDay, parse } from "date-fns";
+import { differenceInDays, format, isSameDay, startOfDay } from "date-fns";
 import { DATE_FORMAT } from "@/utils/dates";
 
 import "./PeriodicProjectView.scss";
@@ -27,14 +27,21 @@ const getLastRecord = (project: Project, records: DoneRecord[]): DoneRecord | un
     .at(0);
 }
 
-const getDaysSinceLastDone = (project: Project, records: DoneRecord[]): number | undefined => {
-  const lastRecord = getLastRecord(project, records);
-  if (lastRecord === undefined) return undefined;
-  const formattedDateA = format(lastRecord.date, DATE_FORMAT);
-  const formattedDateB = format(new Date(), DATE_FORMAT);
-  const parsedDateA = parse(formattedDateA, DATE_FORMAT, new Date());
-  const parsedDateB = parse(formattedDateB, DATE_FORMAT, new Date());
-  return differenceInDays(parsedDateA, parsedDateB);
+// const getDaysSinceLastDone = (project: Project, records: DoneRecord[]): number | undefined => {
+//   const lastRecord = getLastRecord(project, records);
+//   if (lastRecord === undefined) return undefined;
+//   const formattedDateA = format(lastRecord.date, DATE_FORMAT);
+//   const formattedDateB = format(new Date(), DATE_FORMAT);
+//   const parsedDateA = parse(formattedDateA, DATE_FORMAT, new Date());
+//   const parsedDateB = parse(formattedDateB, DATE_FORMAT, new Date());
+//   return differenceInDays(parsedDateA, parsedDateB);
+// }
+
+const getPastDueDays = (nextDate: number | undefined): number | undefined => {
+  if (nextDate === undefined) return undefined;
+  const dateA = startOfDay(nextDate);
+  const dateB = startOfDay(new Date());
+  return differenceInDays(dateA, dateB);
 }
 
 const isDoneToday = (project: Project, records: DoneRecord[]): boolean => {
@@ -225,9 +232,10 @@ const PeriodicProjectView: React.FC<PeriodicProjectViewProps> = ({ project, show
   const wasDoneToday = isDoneToday(project, records);
   const [showDetails, setShowDetails] = useState(false);
   const title = extracTitleText(project.title);
-  const daysSinceLastDone = getDaysSinceLastDone(project, records);
-  const daysSinceLastDoneText = showDaysSinceLastDone ? `(${daysSinceLastDone})` : '';
   const nextDate = getNextDate(project, records)
+  // const daysSinceLastDone = getDaysSinceLastDone(project, records);
+  const daysSinceLastDone = getPastDueDays(nextDate);
+  const daysSinceLastDoneText = showDaysSinceLastDone ? `(${daysSinceLastDone})` : '';
 
   useEffect(() => {
     setShowDetails(false);
