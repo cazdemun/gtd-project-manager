@@ -8,7 +8,8 @@ import { Row } from '@/app/ui';
 
 import "./Header.scss";
 
-type EventType = AppMachineEvent['type'];
+// We could exclude all non-navigation events, but we'll just exclude the ones that need additional inputs
+type EventType = Exclude<AppMachineEvent['type'], 'SELECT_PROJECT'>;
 
 type HeaderProps = object
 
@@ -49,7 +50,7 @@ const Header: React.FC<HeaderProps> = () => {
     <header className="header">
       <Row centerY gap={20}>
         <AiOutlineMenu style={{ cursor: 'pointer' }} onClick={showSidebar} />
-        {currentSource && <span>{currentSource ? currentSource.title : '[No source selected]'}</span>}
+        <span>{currentSource ? currentSource.title : '[No source selected]'}</span>
         <Row centerY gap={10}>
           <HeaderElement selected={isProjectsPage} value="GO_PROJECTS" text="Projects" />
           <hr style={{ alignSelf: 'stretch' }} />
