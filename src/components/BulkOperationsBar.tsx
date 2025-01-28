@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { AppActor } from "@/app/machines/appMachine";
 import { ProjectActor } from "@/app/resources";
 import { Row, Col } from "@/app/ui";
@@ -8,9 +9,15 @@ import { useSelector } from "@xstate/react";
 type BulkOperationsBarProps = object
 
 const BulkOperationsBar: React.FC<BulkOperationsBarProps> = () => {
+  const [showBar, setShowBar] = useState(false);
+
   const selectMode = useSelector(AppActor, (state) => state.matches({ projectsPage: 'select' }));
   const selectedProjects = useSelector(AppActor, (state) => state.context.selectedProjectIds);
   const projectsMap = useSelector(ProjectActor, (state) => state.context.resourcesMap);
+
+  const toggleShowBar = () => {
+    setShowBar((prev) => !prev);
+  }
 
   const handleSelectToggle = () => {
     AppActor.send({ type: selectMode ? 'IDLE_PROJECTS_MODE' : 'SELECT_PROJECTS_MODE' });
@@ -75,21 +82,24 @@ const BulkOperationsBar: React.FC<BulkOperationsBarProps> = () => {
   }
 
   return (
-    <Col gap={10}>
-      <h2>Bulk Operations</h2>
-      <hr style={{ alignSelf: 'stretch' }} />
-      <Row gap={10} centerY>
-        <button onClick={handleSelectToggle}>{selectMode ? `Cancel select (${selectedProjects.length})` : 'Select'}</button>
-        {selectMode && (<>
-          <hr style={{ alignSelf: 'stretch' }} />
-          <button onClick={handleExport}>Export</button>
-          <button onClick={handleManyDelete}>Delete</button>
-          <hr style={{ alignSelf: 'stretch' }} />
-          <button onClick={doneProjectBulk}>Done</button>
-          <button onClick={pendingProjectBulk}>Progress</button>
-          <button onClick={incubatedProjectBulk}>Incubated</button>
-        </>)}
-      </Row>
+    <Col gap={8} centerY style={{ borderRadius: "5px", border: "1px solid #fff", padding: "8px" }}>
+      <h3 onClick={toggleShowBar} style={{ cursor: 'pointer' }}>
+        Bulk Operations
+      </h3>
+      {showBar && (
+        <Row gap={10} centerY style={{ padding: "0px 8px", flexWrap: "wrap" }}>
+          <button onClick={handleSelectToggle}>{selectMode ? `Cancel select (${selectedProjects.length})` : 'Select'}</button>
+          {selectMode && (<>
+            <hr style={{ alignSelf: 'stretch' }} />
+            <button onClick={handleExport}>Export</button>
+            <button onClick={handleManyDelete}>Delete</button>
+            <hr style={{ alignSelf: 'stretch' }} />
+            <button onClick={doneProjectBulk}>Done</button>
+            <button onClick={pendingProjectBulk}>Progress</button>
+            <button onClick={incubatedProjectBulk}>Incubated</button>
+          </>)}
+        </Row>
+      )}
     </Col>
   );
 };
