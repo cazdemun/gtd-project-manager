@@ -2,127 +2,34 @@
 
 import React, { useState } from "react";
 import { useSelector } from "@xstate/react";
-import { Button, Row } from "@/app/ui";
+import { Button, Col, Row } from "@/app/ui";
 import { ProjectActor, RecordActor, SourceActor } from "@/app/resources";
 import { AppActor } from "@/app/machines/appMachine";
-import { isDoneDate } from "@/utils/dates";
-import { getTagsAndCount, isProjectDone, isProjectIncubated, isProjectPending } from "@/utils";;
-import LinealDatePicker from "./LinealDatePicker";
+import { getTagsAndCount } from "@/utils";;
 import BulkOperationsBar from "./BulkOperationsBar";
 import ProjectCard from "./ProjectCard";
 import BaseProjectCard from "./BaseProjectCard";
+import { FilterBar } from "./FilterBar";
+import { useProjectFilter } from "@/hooks/useProjectFilter";
 
 import "@/styles/common.scss"
 
-type TagFilterState = {
-  state: 'tagless' | 'tagged' | 'all';
-  label: string;
-}
+type ProjectsPanelProps = object;
 
-const tagFilterStates: Record<TagFilterState['state'], TagFilterState> = {
-  all: { state: 'all', label: 'All' },
-  tagless: { state: 'tagless', label: 'Tagless' },
-  tagged: { state: 'tagged', label: 'Tagged' },
-}
+const ProjectsPanel: React.FC<ProjectsPanelProps> = () => {
+  const [collapsedList, setCollapsedList] = useState(false);
 
-type TagFilterStateButtonsProps = {
-  currentFilter: TagFilterState;
-  onClick: (filterState: TagFilterState) => void;
-};
-
-const TagFilterStateButtons: React.FC<TagFilterStateButtonsProps> = ({ currentFilter, onClick }) => {
-  return (
-    <>
-      {Object.values(tagFilterStates).map((filterState) => (
-        <button
-          key={filterState.state}
-          onClick={() => onClick(filterState)}
-        >
-          {`${filterState.label} ${currentFilter.state === filterState.state ? '(✔)' : ''}`}
-        </button>
-      ))}
-    </>
-  );
-};
-
-type ProgressFilterState = {
-  state: 'all' | 'done' | 'pending' | 'incubated';
-  label: string;
-  disabled?: boolean;
-}
-
-const doneFilterStates: Record<ProgressFilterState['state'], ProgressFilterState> = {
-  all: { state: 'all', label: 'All' },
-  done: { state: 'done', label: 'Done' },
-  pending: { state: 'pending', label: 'Pending' },
-  incubated: { state: 'incubated', label: 'Incubated' },
-}
-
-const isProgressState = (state: ProgressFilterState['state'], project: Project): boolean => {
-  if (state === 'all') {
-    return true;
-  } else if (state === 'done') {
-    return isProjectDone(project);
-  } else if (state === 'incubated') {
-    return isProjectIncubated(project);
-  } else if (state === 'pending') {
-    return isProjectPending(project);
-  }
-  return false;
-}
-
-const getProjectsLength = (state: ProgressFilterState['state'], projects: Project[]): number => {
-  if (state === 'all') {
-    return projects.length;
-  } else if (state === 'done') {
-    return projects.filter(isProjectDone).length;
-  } else if (state === 'incubated') {
-    return projects.filter(isProjectIncubated).length;
-  } else if (state === 'pending') {
-    return projects.filter(isProjectPending).length;
-  }
-  return projects.length;
-}
-
-
-type DoneFilterStateButtonsProps = {
-  currentFilter: ProgressFilterState;
-  onClick: (filterState: ProgressFilterState) => void;
-};
-
-const DoneFilterStateButtons: React.FC<DoneFilterStateButtonsProps> = ({ currentFilter, onClick }) => {
   const projects = useSelector(ProjectActor, ({ context }) => context.resources);
-  return (
-    <>
-      {Object.values(doneFilterStates).map((filterState) => (
-        <button
-          key={filterState.state}
-          onClick={() => onClick(filterState)}
-          disabled={filterState.disabled}
-        >
-          {`${filterState.label} (${getProjectsLength(filterState.state, projects)}) ${currentFilter.state === filterState.state ? '✔' : ''}`}
-        </button>
-      ))}
-    </>
-  );
-};
+  const { filterState, setFilterState, filteredProjects } = useProjectFilter(projects, { progressState: 'all', tagState: 'tagless' });
 
-type ProjectsListProps = {
-  projects: Project[];
-  collapsed?: boolean;
-  onHide?: () => void;
-  onShow?: () => void;
-}
-
-const ProjectsList: React.FC<ProjectsListProps> = ({ projects, collapsed, onHide, onShow }) => {
   const fetchingProjects = useSelector(ProjectActor, (state) => state.matches('fetching'));
 
   const collapseList = () => {
-    onHide?.();
+    setCollapsedList(true);
   }
 
   const expandList = () => {
-    onShow?.();
+    setCollapsedList(false);
   }
 
   const loadProjects = () => {
@@ -131,52 +38,45 @@ const ProjectsList: React.FC<ProjectsListProps> = ({ projects, collapsed, onHide
     RecordActor.send({ type: 'FETCH' })
   }
 
-  if (collapsed) {
+  if (collapsedList) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '10px',
-          textAlign: 'center',
-        }}>
-        <h2>Projects</h2>
-        <button onClick={expandList}>Show list</button>
-        <Button onClick={loadProjects} loading={fetchingProjects}>Load projects</Button>
-        <button disabled>Add project</button>
-      </div>
+      <>
+        <Col gap={10} style={{ textAlign: 'center', flex: 'none' }}>
+          <h2>Projects</h2>
+          <button onClick={expandList}>Show list</button>
+          <Button onClick={loadProjects} loading={fetchingProjects}>Load projects</Button>
+          <button disabled>Add project</button>
+        </Col>
+        <hr style={{ alignSelf: 'stretch' }} />
+      </>
     );
   }
 
   return (
-    <div style={{ overflow: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-      <div style={{ display: 'flex', gap: '10px' }}>
-        <h2 style={{ flex: '1' }}>Projects</h2>
+    <Col gap={10} style={{ overflow: 'auto', flex: '1' }}>
+      <FilterBar filterState={filterState} updateFilterState={setFilterState} progressStateFilter tagStateFilter />
+      <Row gap={10}>
+        <h2 style={{ flex: '1' }}>{`Projects (${filteredProjects.length})`}</h2>
         <button disabled>Add project</button>
         <Button onClick={loadProjects} loading={fetchingProjects}>Load projects</Button>
         <button onClick={collapseList}>Hide list</button>
-      </div>
+      </Row>
       <hr />
       <div>
-        {projects.map((project, i) => (<ProjectCard key={i} project={project} showCardHeaderTags />))}
+        {filteredProjects.map((project, i) => (<ProjectCard key={i} project={project} showCardHeaderTags />))}
       </div>
-    </div>
+    </Col>
   );
 };
 
-type ProjectsPageProps = object
+type TabsPanelProps = object
 
-const ProjectsPage: React.FC<ProjectsPageProps> = () => {
+const TabsPanel: React.FC<TabsPanelProps> = () => {
   const projects = useSelector(ProjectActor, ({ context }) => context.resources);
-
-  const [dateFilter, setDateFilter] = useState<number | undefined>(undefined);
-  const [tags, pendingTags, doneTags, incubatedTags, overallTags] = getTagsAndCount(projects, dateFilter);
-
-  const [doneFilter, setDoneFilter] = useState<ProgressFilterState>(doneFilterStates['pending']);
-  const [tagFilter, setTagFilter] = useState<TagFilterState>(tagFilterStates['tagless']);
+  const { filterState, setFilterState, filteredProjects } = useProjectFilter(projects, { progressState: 'pending' });
+  const [tags, pendingTags, doneTags, incubatedTags, overallTags] = getTagsAndCount(projects, filterState.doneDate);
 
   const [tagSelected, setTagSelected] = useState<string | undefined>(undefined);
-  const [collapsedList, setCollapsedList] = useState(false);
 
   const selectMode = useSelector(AppActor, (state) => state.matches({ projectsPage: 'select' }));
   const selectedProjects = useSelector(AppActor, (state) => state.context.selectedProjectIds);
@@ -185,7 +85,7 @@ const ProjectsPage: React.FC<ProjectsPageProps> = () => {
     AppActor.send({ type: 'SELECT_PROJECT', projectId });
   };
 
-  const getTagNumberByProgress = (tag: string, progress: ProgressFilterState['state']): number => {
+  const getTagNumberByProgress = (tag: string, progress: FilterState['progressState']): number => {
     if (progress === 'done') {
       return doneTags[tag] ?? 0;
     } else if (progress === 'incubated') {
@@ -197,23 +97,8 @@ const ProjectsPage: React.FC<ProjectsPageProps> = () => {
     }
   }
 
-  const commonFilteredProjects = projects
-    .filter((project) => isProgressState(doneFilter.state, project))
-    .filter((project) => isDoneDate(dateFilter, project.done))
-    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
-  const filteredProjects = commonFilteredProjects
-    .filter((project) => {
-      if (tagFilter.state === 'all') {
-        return true;
-      } else if (tagFilter.state === 'tagless') {
-        return project.tags.length === 0;
-      } else {
-        return project.tags.length > 0;
-      }
-    })
-
-  const tagSelectedProjects = commonFilteredProjects
+  const tagSelectedProjects = filteredProjects
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
     .filter((project) => {
       if (tagSelected === undefined) {
         return false;
@@ -237,7 +122,7 @@ const ProjectsPage: React.FC<ProjectsPageProps> = () => {
           <button
             style={{ padding: '10px', backgroundColor: tagSelected === tag ? 'gray' : 'black', color: 'white', borderRadius: ' 5px 5px 0px 0px' }}
           >
-            {`${tag} (${getTagNumberByProgress(tag, doneFilter.state)})`}
+            {`${tag} (${getTagNumberByProgress(tag, filterState.progressState)})`}
           </button>
         </div>
       ))}
@@ -245,53 +130,44 @@ const ProjectsPage: React.FC<ProjectsPageProps> = () => {
   );
 
   return (
+    <>
+      <FilterBar filterState={filterState} updateFilterState={setFilterState} progressStateFilter />
+      <Col>
+        <Tabs />
+        {tagSelectedProjects.map((project, i) => (
+          selectMode ? (
+            <BaseProjectCard key={i} project={project}>
+              <Row centerY gap={10}>
+                <input
+                  type="checkbox"
+                  checked={selectedProjects.some((_id) => _id === project._id)}
+                  onChange={() => handleProjectSelect(project._id)}
+                  style={{ flex: 'none', width: 'auto' }}
+                />
+                <h4>{project.title}</h4>
+                <pre>{project.tags.join(', ')}</pre>
+              </Row>
+            </BaseProjectCard>
+          ) : (<ProjectCard key={i} project={project} orderInfos={tagSelectedProjectsOrderInfo} showCardHeaderTags />)
+        ))}
+      </Col>
+    </>
+  )
+};
+
+type ProjectsPageProps = object
+
+const ProjectsPage: React.FC<ProjectsPageProps> = () => {
+  return (
     <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         <BulkOperationsBar />
-        <h2>Filters</h2>
-        <hr />
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <span>Tagged status:</span>
-          <TagFilterStateButtons currentFilter={tagFilter} onClick={setTagFilter} />
-          <span>Progress status:</span>
-          <DoneFilterStateButtons currentFilter={doneFilter} onClick={setDoneFilter} />
-          {doneFilter.state === 'done' && (
-            <>
-              <span>Done date:</span>
-              <LinealDatePicker initialValue={dateFilter} onValueChange={setDateFilter} />
-            </>
-          )}
-        </div>
       </div>
       <hr />
       <div style={{ display: 'flex', gap: '10px' }}>
-        <div style={{ flex: collapsedList ? 'none' : '1' }}>
-          <ProjectsList
-            projects={filteredProjects}
-            collapsed={collapsedList}
-            onHide={() => setCollapsedList(true)}
-            onShow={() => setCollapsedList(false)}
-          />
-        </div>
-        {collapsedList && <hr />}
-        <div style={{ flex: 2, overflow: 'auto' }}>
-          <Tabs />
-          {tagSelectedProjects.map((project, i) => (
-            selectMode ? (
-              <BaseProjectCard key={i} project={project}>
-                <Row centerY gap={10}>
-                  <input
-                    type="checkbox"
-                    checked={selectedProjects.some((_id) => _id === project._id)}
-                    onChange={() => handleProjectSelect(project._id)}
-                    style={{ flex: 'none', width: 'auto' }}
-                  />
-                  <h4>{project.title}</h4>
-                  <pre>{project.tags.join(', ')}</pre>
-                </Row>
-              </BaseProjectCard>
-            ) : (<ProjectCard key={i} project={project} orderInfos={tagSelectedProjectsOrderInfo} showCardHeaderTags />)
-          ))}
+        <ProjectsPanel />
+        <div style={{ flex: 2, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <TabsPanel />
         </div>
       </div>
     </div >
