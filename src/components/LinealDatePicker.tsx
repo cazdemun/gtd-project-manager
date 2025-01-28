@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { format, parse, isValid as _isValid, isAfter, addDays, subDays, isSameDay, isBefore } from 'date-fns';
 import { AiFillCaretLeft, AiFillCaretRight, AiOutlineClear, AiOutlineReload } from 'react-icons/ai';
 import { DATE_FORMAT } from '@/utils/dates';
@@ -23,12 +23,13 @@ const LinealDatePicker: React.FC<LinealDatePickerProps> = ({ onValueChange, init
   const [inputValue, setInputValue] = useState(initialValue ? format(initialValue, DATE_FORMAT) : '');
   const [numericValue, setNumericValue] = useState<number | undefined>(initialValue);
 
-  useEffect(() => {
-    onValueChange?.(numericValue);
-  }, [numericValue, onValueChange]);
+  const _updateNumericValue = (value: number | undefined) => {
+    setNumericValue(value);
+    onValueChange?.(value);
+  }
 
   const _updateValues = (value: number) => {
-    setNumericValue(value);
+    _updateNumericValue(value);
     setInputValue(format(value, DATE_FORMAT));
   }
 
@@ -36,7 +37,7 @@ const LinealDatePicker: React.FC<LinealDatePickerProps> = ({ onValueChange, init
     setInputValue(e.target.value);
 
     if (e.target.value === '') {
-      setNumericValue(undefined);
+      _updateNumericValue(undefined);
       setIsInputValid(true);
       return
     }
@@ -44,17 +45,17 @@ const LinealDatePicker: React.FC<LinealDatePickerProps> = ({ onValueChange, init
     const parsedDate = parse(e.target.value, DATE_FORMAT, new Date());
     setIsInputValid(isValid(parsedDate, mode));
     if (isValid(parsedDate, mode) && parsedDate.getTime() !== numericValue) {
-      setNumericValue(parsedDate.getTime());
+      _updateNumericValue(parsedDate.getTime());
     }
   };
 
   const handleInputBlur = () => {
     const parsedDate = parse(inputValue, DATE_FORMAT, new Date());
     if (isValid(parsedDate, mode)) {
-      setNumericValue(parsedDate.getTime());
+      _updateNumericValue(parsedDate.getTime());
     } else {
-      const oldInputValue = numericValue ? format(numericValue, DATE_FORMAT) : '';
-      setInputValue(oldInputValue);
+      const cachedInputValue = numericValue ? format(numericValue, DATE_FORMAT) : '';
+      setInputValue(cachedInputValue);
       setIsInputValid(true);
     }
   };
@@ -83,7 +84,7 @@ const LinealDatePicker: React.FC<LinealDatePickerProps> = ({ onValueChange, init
   };
 
   const handleClear = () => {
-    setNumericValue(undefined);
+    _updateNumericValue(undefined);
     setInputValue('');
   }
 
