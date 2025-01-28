@@ -49,21 +49,21 @@ type ProjectCardProps = {
 const ProjectCard: React.FC<ProjectCardProps> = ({ project, showCardHeaderTags, orderInfos }) => {
   return (
     <BaseProjectCard
-      controls={
+      project={project}
+      innerHeaderControls={(
         <>
           <EditProjectControl project={project} show='onlyIcon' />
           <CopyPasteControl project={project} show='onlyIcon' />
-          {showCardHeaderTags && <CardHeaderTags project={project} />}
-          {orderInfos && (
-            <>
-              <hr style={{ alignSelf: 'stretch' }} />
-              <SwapUpControl project={project} orderInfos={orderInfos} show="onlyIcon" />
-              <SwapDownControl project={project} orderInfos={orderInfos} show="onlyIcon" />
-            </>)
-          }
         </>
-      }
-      project={project}
+      )}
+      headerControls={orderInfos && (
+        <>
+          {showCardHeaderTags && <CardHeaderTags project={project} />}
+          <hr style={{ alignSelf: 'stretch' }} />
+          <SwapUpControl project={project} orderInfos={orderInfos} show="onlyIcon" />
+          <SwapDownControl project={project} orderInfos={orderInfos} show="onlyIcon" />
+        </>
+      )}
       content={<ProjectCardContent project={project} />}
       popOverContent={<ProjectCardContent project={project} showCardHeaderTags={false} actionsStartIndentLevelZero />}
       popOverControls={

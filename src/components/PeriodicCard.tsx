@@ -98,7 +98,7 @@ const PeriodicCard: React.FC<PeriodicCardProps> = ({ project, showCardHeaderTags
     <BaseProjectCard
       className={project.periodicData?.period === 1 ? styles["daily"] : ''}
       title={<h5>{`${title} ${daysFromTodayUntilNextDate}`}</h5>}
-      controls={<PeriodicCardControls project={project} orderInfos={orderInfos} showCardHeaderTags={showCardHeaderTags} showProgressControls={showProgressControls} />}
+      headerControls={<PeriodicCardControls project={project} orderInfos={orderInfos} showCardHeaderTags={showCardHeaderTags} showProgressControls={showProgressControls} />}
       project={project}
       content={<PeriodicCardContent project={project} />}
       popOverContent={(

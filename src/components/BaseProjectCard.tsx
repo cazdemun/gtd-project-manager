@@ -5,17 +5,18 @@ import { extracTitleText } from "@/utils";
 import styles from "./BaseProjectCard.module.scss";
 
 type BaseProjectCardProps = {
+  project: Project;
   className?: string;
   children?: React.ReactNode;
   title?: React.ReactNode;
-  project: Project;
   content?: React.ReactNode[] | React.ReactNode;
-  controls?: React.ReactNode[] | React.ReactNode;
+  innerHeaderControls?: React.ReactNode[] | React.ReactNode;
+  headerControls?: React.ReactNode[] | React.ReactNode;
   popOverContent?: React.ReactNode[] | React.ReactNode;
   popOverControls?: React.ReactNode[] | React.ReactNode;
 }
 
-export const BaseProjectCard: React.FC<BaseProjectCardProps> = ({ className: _className, children, title, project, content, controls, popOverContent, popOverControls }) => {
+export const BaseProjectCard: React.FC<BaseProjectCardProps> = ({ className: _className, children, title, project, content, innerHeaderControls, headerControls, popOverContent, popOverControls }) => {
   const [showDetails, setShowDetails] = useState(false);
 
   const titleText = extracTitleText(project.title);
@@ -38,8 +39,9 @@ export const BaseProjectCard: React.FC<BaseProjectCardProps> = ({ className: _cl
             {title ? title : <h4>{titleText}</h4>}
           </span>
         </Popover>
+        {innerHeaderControls}
       </Row>
-      {controls}
+      {headerControls}
     </Row>
   );
 
