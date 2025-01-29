@@ -16,7 +16,7 @@ const isEquivalent = (tagsA: string[], tagsB: string[]): boolean => {
   return tagsA.every((tag) => tagsB.includes(tag));
 }
 
-const extracTitleText = (title: string): string => {
+const getTitleText = (title: string): string => {
   return title.replaceAll(/^- \[x\]|^- \[X\]|^- \[ \]|^- \[\?\]|^- |#periodic/g, '').trim();
 }
 
@@ -231,7 +231,7 @@ const PeriodicProjectView: React.FC<PeriodicProjectViewProps> = ({ project, show
   const records = useSelector(RecordActor, ({ context }) => context.resources);
   const wasDoneToday = isDoneToday(project, records);
   const [showDetails, setShowDetails] = useState(false);
-  const title = extracTitleText(project.title);
+  const title = getTitleText(project.title);
   const nextDate = getNextDate(project, records)
   // const daysSinceLastDone = getDaysSinceLastDone(project, records);
   const daysSinceLastDone = getPastDueDays(nextDate);

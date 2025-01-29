@@ -1,7 +1,7 @@
 import React from "react";
-import CardHeaderTags from "./CardHeaderTags";
+import CardHeaderTags from "../CardHeaderTags";
 import BaseProjectCard from "./BaseProjectCard";
-import { CopyPasteControl } from "./controls";
+import { CopyPasteControl } from "../controls";
 
 type NewProjectCardContentProps = {
   project: Project;

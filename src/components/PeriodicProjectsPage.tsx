@@ -5,8 +5,8 @@ import { isValid, parse } from 'date-fns';
 import { DATE_FORMAT, isBeforeByDay } from '@/utils/dates';
 import { Button, Col } from '@/app/ui';
 import { getNextDate, wasPeriodicDoneToday, isPeriodicFuture, isPeriodicPastDue, isPeriodicToday, isPeriodicUncategorized } from '@/utils';
-import PeriodicCard from './PeriodicCard';
-import ProjectCard from './ProjectCard';
+import PeriodicCard from './cards/PeriodicCard';
+import ProjectCard from './cards/ProjectCard';
 
 type DateConverterProps = object
 

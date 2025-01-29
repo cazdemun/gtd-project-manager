@@ -1,5 +1,5 @@
 import React from 'react';
-import { extracTitleText } from "@/utils";
+import { getTitleText } from "@/utils";
 import { ProjectActor } from "@/app/resources";
 import BaseControl from "./BaseControl";
 import { AiOutlineCheck } from 'react-icons/ai';
@@ -8,7 +8,7 @@ import { useSelector } from '@xstate/react';
 type ProgressProjectControlProps = BaseProjectControlProps;
 
 const _updateProgress = (project: Project, progress: " " | "x" | "?") => {
-  const title = extracTitleText(project.title);
+  const title = getTitleText(project.title);
   const newTitle = `- [${progress}] ${title}`;
   ProjectActor.send({
     type: 'UPDATE', updatedResources: [{

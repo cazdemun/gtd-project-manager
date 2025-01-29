@@ -12,7 +12,7 @@ const isEqual = (tagsA: string[], tagsB: string[]): boolean => {
   return tagsA.every((tag) => tagsB.includes(tag));
 }
 
-const extracTitleText = (title: string): string => {
+const getTitleText = (title: string): string => {
   return title.replaceAll(/^- \[x\]|^- \[X\]|^- \[ \]|^- \[\?\]|^- /g, '').trim();
 }
 
@@ -140,7 +140,7 @@ type ProjectViewProps = {
 
 const ProjectView: React.FC<ProjectViewProps> = ({ project, showHeaderTags, orderInfo }) => {
   const [showDetails, setShowDetails] = useState(false);
-  const title = extracTitleText(project.title);
+  const title = getTitleText(project.title);
 
   useEffect(() => {
     setShowDetails(false);
@@ -172,7 +172,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, showHeaderTags, orde
   };
 
   const _updateProgress = (progress: " " | "x" | "?") => {
-    const title = extracTitleText(project.title);
+    const title = getTitleText(project.title);
     const newTitle = `- [${progress}] ${title}`;
     ProjectActor.send({
       type: 'UPDATE', updatedResources: [{

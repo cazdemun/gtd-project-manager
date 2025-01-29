@@ -1,3 +1,4 @@
+import { getPotentialTextResources, isTextProjectPeriodic, normalizePotentialTextResource } from ".";
 import { RAW_PROJECT_ACTIONS_REGEX, RAW_PROJECT_DESCRIPTION_REGEX, RAW_PROJECT_TAGS_REGEX, RAW_PROJECT_TITLE_REGEX, RAW_PROJECT_UUID_REGEX } from "./constants";
 
 // --- Text Repository Utils ---
@@ -89,10 +90,6 @@ export function textProjectToText(project: TextProject): string {
 
 // --- Text Json Repository Utils ---
 
-export function isTextProjectPeriodic(textProject: TextProject): boolean {
-  return textProject.title.match(/- .*?#periodic/) !== null;
-}
-
 function textProjectToProject(textProject: TextProject, projectsMap: Map<string, Project>, newOrder: number): Project {
   const order = projectsMap.get(textProject._id)?.order ?? newOrder;
   return {
@@ -102,9 +99,28 @@ function textProjectToProject(textProject: TextProject, projectsMap: Map<string,
   };
 }
 
+// This function is using for creating projects but also for parsing already existing projects, 
+// that is why we need to pass the whole projects array instead of just the last order.
 export function textProjectsToProjects(textProjects: TextProject[], projects: Project[]): Project[] {
   const lastOrder = projects.reduce((acc, resource) => Math.max(acc, (resource as { order?: number })?.order ?? 0), 0)
   const projectsMap = new Map(projects.map((project) => [project._id, project]));
   const projectsToCreate = textProjects.map((textProject, index) => textProjectToProject(textProject, projectsMap, lastOrder + index + 1));
   return projectsToCreate;
+}
+
+// --- Utils ---
+
+// This function is used to convert the text fragment (from a splitted text file) into a TextProject, which is a subset of Project.
+// Is used for creating new projects from text.
+export function textToProjects(text: string, projects: Project[]): Project[] {
+  const lastOrder = projects.reduce((acc, resource) => Math.max(acc, (resource as { order?: number })?.order ?? 0), 0)
+  return getPotentialTextResources(text)
+    .map((textResource) => normalizePotentialTextResource(textResource))
+    .map((text) => textToTextProject(text))
+    .filter((project): project is TextProject => project !== undefined)
+    .map((project, index) => {
+      return { ...project, order: lastOrder + index + 1 };
+    }).map((project) => {
+      return { ...project, periodic: isTextProjectPeriodic(project) };
+    });
 }

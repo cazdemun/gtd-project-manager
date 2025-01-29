@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Col, Popover, Row } from "@/app/ui";
-import { extracTitleText } from "@/utils";
+import { getTitleText } from "@/utils";
 
 import styles from "./BaseProjectCard.module.scss";
 
@@ -19,7 +19,7 @@ type BaseProjectCardProps = {
 export const BaseProjectCard: React.FC<BaseProjectCardProps> = ({ className: _className, children, title, project, content, innerHeaderControls, headerControls, popOverContent, popOverControls }) => {
   const [showDetails, setShowDetails] = useState(false);
 
-  const titleText = extracTitleText(project.title);
+  const titleText = getTitleText(project.title);
   const className = _className ?? '';
   const showPopOver = !!popOverContent || !!popOverControls;
 

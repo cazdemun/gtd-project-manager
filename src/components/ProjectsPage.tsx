@@ -7,8 +7,8 @@ import { ProjectActor, ProjectUIActor, RecordActor, SourceActor } from "@/app/re
 import { AppActor } from "@/app/machines/appMachine";
 import { getTagsAndCount } from "@/utils";;
 import BulkOperationsBar from "./BulkOperationsBar";
-import ProjectCard from "./ProjectCard";
-import SelectProjectCard from "./SelectProjectCard";
+import ProjectCard from "./cards/ProjectCard";
+import SelectProjectCard from "./cards/SelectProjectCard";
 import FilterBar from "./FilterBar";
 import { useProjectFilter } from "@/hooks/useProjectFilter";
 

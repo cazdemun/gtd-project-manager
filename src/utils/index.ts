@@ -50,10 +50,12 @@ export function isProjectPending(project: Project): boolean {
   return !isProjectDone(project) && !isProjectIncubated(project);
 }
 
-export function extracTitleText(title: string, filterPeriodic: boolean = false): string {
+export function getTitleText(title: string, filterPeriodic: boolean = false): string {
   if (filterPeriodic) return title.replaceAll(/^- \[x\]|^- \[X\]|^- \[ \]|^- \[\?\]|^- |#periodic/g, '').trim();
   return title.replaceAll(/^- \[x\]|^- \[X\]|^- \[ \]|^- \[\?\]|^- /g, '').trim();
 }
+
+
 
 export const getCountedTags = (projects: Project[], dateFilter: number | undefined): [Record<string, number>, Record<string, number>, Record<string, number>, Record<string, number>] => {
   const pendingTagsCount: Record<string, number> = {};
@@ -113,6 +115,10 @@ export const getLastRecord = (project: Project, records: DoneRecord[]): DoneReco
     .filter((record) => record.projectId === project._id)
     .sort((a, b) => b.date - a.date)
     .at(0);
+}
+
+export function isTextProjectPeriodic(textProject: TextProject): boolean {
+  return textProject.title.match(/- .*?#periodic/) !== null;
 }
 
 export function getLastDoneDate(project: Project, records: DoneRecord[]): number | undefined {

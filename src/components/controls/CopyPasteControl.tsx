@@ -6,7 +6,7 @@ type CopyPasteControlProps = BaseProjectControlProps;
 
 const CopyPasteControl: React.FC<CopyPasteControlProps> = ({ project, show }) => {
   const copyToClipboard = () => {
-    // const title = extracTitleText(project.title);
+    // const title = getTitleText(project.title);
     const text = textProjectToText(project);
     navigator.clipboard.writeText(text)
       .then(() => {

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { AppActor } from "@/app/machines/appMachine";
 import { ProjectActor } from "@/app/resources";
 import { Row, Col } from "@/app/ui";
-import { extracTitleText } from "@/utils";
+import { getTitleText } from "@/utils";
 import { textProjectToText } from "@/utils/repository";
 import { useSelector } from "@xstate/react";
 
@@ -32,7 +32,7 @@ const BulkOperationsBar: React.FC<BulkOperationsBarProps> = () => {
       .map((id) => projectsMap.get(id))
       .filter((project): project is Project => project !== undefined)
       .map((project) => {
-        const title = extracTitleText(project.title);
+        const title = getTitleText(project.title);
         const newTitle = `- [${progress}] ${title}`;
         return {
           _id: project._id,

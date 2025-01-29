@@ -1,14 +1,14 @@
 import React from "react";
 import { Row } from "@/app/ui";
-import CardHeaderTags from "./CardHeaderTags";
+import CardHeaderTags from "../CardHeaderTags";
 import BaseProjectCard from "./BaseProjectCard";
-import { EditProjectControl, CopyPasteControl, DeleteProjectControl, SwapTopControl, SwapBottomControl, SwapUpControl, SwapDownControl, DonePeriodicControl, PendingPeriodicControl } from "./controls";
-import { daysFromToday, extracTitleText, getLastDoneDate, getNextDate, wasPeriodicDoneToday } from "@/utils";
+import { EditProjectControl, CopyPasteControl, DeleteProjectControl, SwapTopControl, SwapBottomControl, SwapUpControl, SwapDownControl, DonePeriodicControl, PendingPeriodicControl } from "../controls";
+import { daysFromToday, getTitleText, getLastDoneDate, getNextDate, wasPeriodicDoneToday } from "@/utils";
 import { useSelector } from "@xstate/react";
 import { RecordActor } from "@/app/resources";
 
 import styles from "./PeriodicCard.module.scss";
-import UpdatePeriodicForm from "./forms/UpdatePeriodicForm";
+import UpdatePeriodicForm from "../forms/UpdatePeriodicForm";
 import { format } from "date-fns";
 import { DATE_FORMAT } from "@/utils/dates";
 
@@ -90,7 +90,7 @@ type PeriodicCardProps = {
 
 const PeriodicCard: React.FC<PeriodicCardProps> = ({ project, showCardHeaderTags, orderInfos, recordDate, showProgressControls = true, showDaysUntilNextDate = false }) => {
   const records = useSelector(RecordActor, ({ context }) => context.resources);
-  const title = extracTitleText(project.title, true);
+  const title = getTitleText(project.title, true);
   const lastDate = getLastDoneDate(project, records);
   const nextDate = getNextDate(project, records)
   const daysFromTodayUntilNextDate = showDaysUntilNextDate ? `(${daysFromToday(nextDate)})` : '';

@@ -1,8 +1,8 @@
 import React from "react";
 import { Row } from "@/app/ui";
-import CardHeaderTags from "./CardHeaderTags";
+import CardHeaderTags from "../CardHeaderTags";
 import BaseProjectCard from "./BaseProjectCard";
-import { EditProjectControl, CopyPasteControl, DeleteProjectControl, ProgressProjectControls, SwapTopControl, SwapBottomControl, SwapUpControl, SwapDownControl } from "./controls";
+import { EditProjectControl, CopyPasteControl, DeleteProjectControl, ProgressProjectControls, SwapTopControl, SwapBottomControl, SwapUpControl, SwapDownControl } from "../controls";
 
 type ProjectCardContentProps = {
   project: Project;

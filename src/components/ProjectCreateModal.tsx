@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import Modal from '@/app/ui/Modal';
 import { useSelector } from '@xstate/react';
 import { ProjectActor, ProjectUIActor } from '@/app/resources';
-import { isTextProjectPeriodic, textToTextProject } from '@/utils/repository';
 import { Button, Col, Row, TextArea } from '@/app/ui';
-import { extracTitleText, getPotentialTextResources, normalizePotentialTextResource } from '@/utils';
-import NewProjectCard from './NewProjectCard';
+import { getTitleText } from '@/utils';
+import { textToProjects } from '@/utils/repository';
+import NewProjectCard from './cards/NewProjectCard';
 
 type ProjectCreateModalProps = object
 
@@ -29,24 +29,14 @@ const ProjectCreateModal: React.FC<ProjectCreateModalProps> = () => {
 
   const processProjects = () => {
     const appendedText = `${text}\n<<END>>`;
-    const potentialResources = getPotentialTextResources(appendedText)
-      .map((textResource) => normalizePotentialTextResource(textResource))
-      .map((text) => textToTextProject(text))
-      .filter((project): project is TextProject => project !== undefined)
+    const potentialResources = textToProjects(appendedText, projects)
+      .map((project) => defaultTag ? ({ ...project, tags: [...new Set([...project.tags, defaultTag])] }) : project)
       .map((project) => {
-        if (!defaultTag) return project;
-        return { ...project, tags: [...new Set([...project.tags, defaultTag])] };
-      }).map((project) => {
         if (!defaultIncubated) return project;
-        const title = extracTitleText(project.title);
+        const title = getTitleText(project.title);
         if (!title) return project;
         return { ...project, title: `- [?] ${title}` };
-      }).map((project, index) => {
-        const lastOrder = projects.reduce((acc, resource) => Math.max(acc, (resource as { order?: number })?.order ?? 0), 0)
-        return { ...project, order: lastOrder + index + 1 };
-      }).map((project) => {
-        return { ...project, periodic: isTextProjectPeriodic(project) };
-      });
+      })
     setPotentialProjects(potentialResources);
   };
 
