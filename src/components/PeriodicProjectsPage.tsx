@@ -3,9 +3,10 @@ import { useSelector } from '@xstate/react';
 import React, { useState } from 'react';
 import { isValid, parse } from 'date-fns';
 import { DATE_FORMAT, isBeforeByDay } from '@/utils/dates';
-import { Button } from '@/app/ui';
+import { Button, Col } from '@/app/ui';
 import { getNextDate, wasPeriodicDoneToday, isPeriodicFuture, isPeriodicPastDue, isPeriodicToday, isPeriodicUncategorized } from '@/utils';
 import PeriodicCard from './PeriodicCard';
+import ProjectCard from './ProjectCard';
 
 type DateConverterProps = object
 
@@ -175,11 +176,14 @@ const PeriodicProjectsPage: React.FC<PeriodicProjectsPageProps> = () => {
           </div>
         </div>
       </div>
-      <div style={{ padding: '20px' }}>
-        {phantomProjects.map((project) => (
-          <pre key={project._id}>{JSON.stringify(project, null, 2)}</pre>
-        ))}
-      </div>
+      <Col gap={10} style={{ padding: '20px' }}>
+        <h2>Non Periodic Projects</h2>
+        <div>
+          {phantomProjects.map((project) => (
+            <ProjectCard key={project._id} project={project} showCardHeaderTags />
+          ))}
+        </div>
+      </Col>
     </>
   );
 };
