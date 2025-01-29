@@ -13,7 +13,7 @@ interface FilterBarProps {
   tagStateFilter?: boolean;
 }
 
-export const FilterBar: React.FC<FilterBarProps> = ({
+const FilterBar: React.FC<FilterBarProps> = ({
   filterState,
   updateFilterState,
   progressStateFilter,
@@ -133,3 +133,5 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     </Col>
   );
 };
+
+export default FilterBar;
