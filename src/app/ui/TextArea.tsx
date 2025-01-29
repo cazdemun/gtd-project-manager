@@ -1,8 +1,10 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 
-type TextAreaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement>
+type TextAreaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
+  focus?: boolean;
+}
 
-const TextArea: React.FC<TextAreaProps> = (props) => {
+const TextArea: React.FC<TextAreaProps> = ({ focus, ...props }) => {
   const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -23,6 +25,12 @@ const TextArea: React.FC<TextAreaProps> = (props) => {
     }
     props.onKeyDown?.(e);
   };
+
+  useEffect(() => {
+    if (focus && textAreaRef.current) {
+      textAreaRef.current.focus();
+    }
+  }, [focus]);
 
   return (
     <textarea
