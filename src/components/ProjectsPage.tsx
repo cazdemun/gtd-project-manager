@@ -99,6 +99,7 @@ const TabsPanel: React.FC<TabsPanelProps> = () => {
   const [tags, pendingTags, doneTags, incubatedTags, overallTags] = getTagsAndCount(projects, filterState.doneDate);
 
   const [tagSelected, setTagSelected] = useState<string | undefined>(undefined);
+  const [sortByDone, setSortByDone] = useState(false);
 
   const selectMode = useSelector(AppActor, (state) => state.matches({ projectsPage: 'select' }));
   const selectedProjects = useSelector(AppActor, (state) => state.context.selectedProjectIds);
@@ -106,6 +107,10 @@ const TabsPanel: React.FC<TabsPanelProps> = () => {
   const handleProjectSelect = (projectId: string) => {
     AppActor.send({ type: 'SELECT_PROJECT', projectId });
   };
+
+  const toogleSortByDone = () => {
+    setSortByDone((prev) => !prev);
+  }
 
   const getTagNumberByProgress = (tag: string, progress: FilterState['progressState']): number => {
     if (progress === 'done') {
@@ -143,7 +148,7 @@ const TabsPanel: React.FC<TabsPanelProps> = () => {
 
 
   const Tabs = () => (
-    <div style={{ display: 'flex', flexWrap: 'wrap', columnGap: '0px', rowGap: '5px', flex: '1' }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', columnGap: '0px', rowGap: '5px', flex: '1', alignSelf: 'flex-end' }}>
       {tags.map((tag, i) => (
         <div key={i} onClick={() => selectTag(tag)} style={{ cursor: 'pointer' }}>
           <button
@@ -162,10 +167,15 @@ const TabsPanel: React.FC<TabsPanelProps> = () => {
       <Col>
         <Row>
           <Tabs />
-          <button disabled={!tagSelected} onClick={addProjects} style={{ alignSelf: 'flex-start' }}>Add projects</button>
+          <Col style={{ alignSelf: 'flex-start' }}>
+            <button disabled={!tagSelected} onClick={addProjects} >Add projects</button>
+            <button disabled={!tagSelected} onClick={toogleSortByDone}>
+              {sortByDone ? <strong>Sort by done</strong> : 'Sort by done'}
+            </button>
+          </Col>
         </Row>
         {tagSelectedProjects
-          .sort((a, b) => selectMode ? (a.done ?? 0) - (b.done ?? 0) : 0)
+          .sort((a, b) => selectMode || sortByDone ? (a.done ?? 0) - (b.done ?? 0) : 0)
           .map((project, i) => (
             selectMode ? (
               <SelectProjectCard
