@@ -7,6 +7,13 @@ export function isNullish<T>(value: T | null | undefined): value is null | undef
   return value === null || value === undefined;
 }
 
+export function withConfirmation(message: string, callback: () => void) {
+  const confirmation = window.confirm(message);
+  if (confirmation) {
+    callback();
+  }
+}
+
 /**
  * 
  * @param text 

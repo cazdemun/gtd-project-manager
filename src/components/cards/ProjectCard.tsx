@@ -3,6 +3,8 @@ import { Row } from "@/app/ui";
 import CardHeaderTags from "../CardHeaderTags";
 import BaseProjectCard from "./BaseProjectCard";
 import { EditProjectControl, CopyPasteControl, DeleteProjectControl, ProgressProjectControls, SwapTopControl, SwapBottomControl, SwapUpControl, SwapDownControl } from "../controls";
+import { format } from "date-fns";
+import { DATE_FORMAT } from "@/utils/dates";
 
 type ProjectCardContentProps = {
   project: Project;
@@ -58,6 +60,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, showCardHeaderTags, 
       )}
       headerControls={
         <>
+          {project.done && <pre>{format(project.done, DATE_FORMAT)}</pre>}
           {showCardHeaderTags && <CardHeaderTags project={project} />}
           {orderInfos && (
             <>

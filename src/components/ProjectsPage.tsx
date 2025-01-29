@@ -74,16 +74,18 @@ const ProjectsPanel: React.FC<ProjectsPanelProps> = () => {
       </Row>
       <hr />
       <div>
-        {filteredProjects.map((project, i) => (
-          selectMode ? (
-            <SelectProjectCard
-              key={i}
-              project={project}
-              selected={selectedProjects.includes(project._id)}
-              onSelect={selectProject}
-            />
-          ) : (<ProjectCard key={i} project={project} showCardHeaderTags />)
-        ))}
+        {filteredProjects
+          .sort((a, b) => selectMode ? (a.done ?? 0) - (b.done ?? 0) : 0)
+          .map((project, i) => (
+            selectMode ? (
+              <SelectProjectCard
+                key={i}
+                project={project}
+                selected={selectedProjects.includes(project._id)}
+                onSelect={selectProject}
+              />
+            ) : (<ProjectCard key={i} project={project} showCardHeaderTags />)
+          ))}
       </div>
     </Col>
   );
@@ -162,16 +164,18 @@ const TabsPanel: React.FC<TabsPanelProps> = () => {
           <Tabs />
           <button disabled={!tagSelected} onClick={addProjects} style={{ alignSelf: 'flex-start' }}>Add projects</button>
         </Row>
-        {tagSelectedProjects.map((project, i) => (
-          selectMode ? (
-            <SelectProjectCard
-              key={i}
-              project={project}
-              selected={selectedProjects.includes(project._id)}
-              onSelect={handleProjectSelect}
-            />
-          ) : (<ProjectCard key={i} project={project} orderInfos={tagSelectedProjectsOrderInfo} showCardHeaderTags />)
-        ))}
+        {tagSelectedProjects
+          .sort((a, b) => selectMode ? (a.done ?? 0) - (b.done ?? 0) : 0)
+          .map((project, i) => (
+            selectMode ? (
+              <SelectProjectCard
+                key={i}
+                project={project}
+                selected={selectedProjects.includes(project._id)}
+                onSelect={handleProjectSelect}
+              />
+            ) : (<ProjectCard key={i} project={project} orderInfos={tagSelectedProjectsOrderInfo} showCardHeaderTags />)
+          ))}
       </Col>
     </Col>
   )

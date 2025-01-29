@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Popover, Row } from "@/app/ui";
 import { getTagsAndCount } from "@/utils";
 import { useSelector } from "@xstate/react";
+import { VALID_TAG_REGEX } from "@/utils/constants";
 
 const isEqual = (tagsA: string[], tagsB: string[]): boolean => {
   if (tagsA.length !== tagsB.length) return false;
@@ -12,8 +13,6 @@ const isEqual = (tagsA: string[], tagsB: string[]): boolean => {
 type UpdateProjectFormProps = {
   project: Project;
 }
-
-const VALID_TAG_REGEX = /^(?:[a-zA-Z]+[-])*[a-zA-Z]+$/;
 
 const UpdateTagsForm: React.FC<UpdateProjectFormProps> = ({ project }) => {
   const projects = useSelector(ProjectActor, ({ context }) => context.resources);

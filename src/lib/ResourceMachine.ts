@@ -210,8 +210,8 @@ export const createResourceMachine = <T extends Resource>() => {
           entry: 'clearError',
           input: ({ context: { collection }, event }) => {
             assertEvent(event, 'DELETE');
-            const { resourceIds } = event;
-            return { collection, resourceIds }
+            const { resourceIds, afterDelete } = event;
+            return { collection, resourceIds, afterDelete }
           },
           onDone: {
             target: 'fetching',

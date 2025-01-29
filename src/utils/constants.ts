@@ -19,3 +19,5 @@ export const RAW_PROJECT_TITLE_REGEX = /^-.*?$/gms;
 export const RAW_PROJECT_ACTIONS_REGEX = /^[ \t]+-.*?$/gms;
 export const RAW_PROJECT_DESCRIPTION_REGEX = /(?:^[ \t]*-.*?\n)+(.*?)(?=^<!--ID:|^#)/gms;
 export const RAW_PROJECT_TAGS_REGEX = /^#.*?(?=^<!--ID:)/gms;
+
+export const VALID_TAG_REGEX = /^(?:[a-zA-Z]+[-])*[a-zA-Z]+$/;
