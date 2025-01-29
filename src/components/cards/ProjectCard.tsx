@@ -9,12 +9,18 @@ import { DATE_FORMAT } from "@/utils/dates";
 type ProjectCardContentProps = {
   project: Project;
   showCardHeaderTags?: boolean;
+  debug?: boolean;
   actionsStartIndentLevelZero?: boolean;
 }
 
-const ProjectCardContent: React.FC<ProjectCardContentProps> = ({ project, actionsStartIndentLevelZero, showCardHeaderTags = true }) => {
+const ProjectCardContent: React.FC<ProjectCardContentProps> = ({ project, actionsStartIndentLevelZero, debug = false, showCardHeaderTags = true }) => {
   return (
     <>
+      {debug && (
+        <div style={{ whiteSpace: 'pre-wrap', overflow: 'auto' }}>
+          <pre>{JSON.stringify(project, null, 2)}</pre>
+        </div>
+      )}
       {project.actions.length > 0 && (
         <div>
           {project.actions.map((action, i) => (
@@ -46,9 +52,10 @@ type ProjectCardProps = {
   project: Project;
   showCardHeaderTags?: boolean;
   orderInfos?: OrderInfo[];
+  debug?: boolean;
 }
 
-const ProjectCard: React.FC<ProjectCardProps> = ({ project, showCardHeaderTags, orderInfos }) => {
+const ProjectCard: React.FC<ProjectCardProps> = ({ project, showCardHeaderTags, orderInfos, debug = false }) => {
   return (
     <BaseProjectCard
       project={project}
@@ -71,7 +78,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, showCardHeaderTags, 
           )}
         </>
       }
-      content={<ProjectCardContent project={project} />}
+      content={<ProjectCardContent project={project} debug={debug} />}
       popOverContent={<ProjectCardContent project={project} showCardHeaderTags={false} actionsStartIndentLevelZero />}
       popOverControls={
         <Row centerY gap={10} style={{ flexWrap: 'wrap' }}>

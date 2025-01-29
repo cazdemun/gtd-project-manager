@@ -180,7 +180,7 @@ const PeriodicProjectsPage: React.FC<PeriodicProjectsPageProps> = () => {
         <h2>Non Periodic Projects</h2>
         <div>
           {phantomProjects.map((project) => (
-            <ProjectCard key={project._id} project={project} showCardHeaderTags />
+            <ProjectCard key={project._id} project={project} showCardHeaderTags debug />
           ))}
         </div>
       </Col>
