@@ -6,6 +6,7 @@ import { AppActor } from "@/app/machines/appMachine";
 import { useSelector } from "@xstate/react";
 import ProjectsPage from "./ProjectsPage";
 import PeriodicProjectsPage from "./PeriodicProjectsPage";
+import ProjectCreateModal from "./ProjectCreateModal";
 import ProjectUpdateModal from "./ProjectUpdateModal";
 import { FloatingButton } from "@/app/ui";
 
@@ -21,6 +22,7 @@ export default function App() {
       {isProjectsPage && <ProjectsPage />}
       {isPeriodicProjectsPage && <PeriodicProjectsPage />}
       <FloatingButton />
+      <ProjectCreateModal />
       <ProjectUpdateModal />
     </>
   );

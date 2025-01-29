@@ -56,14 +56,18 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, showCardHeaderTags, 
           <CopyPasteControl project={project} show='onlyIcon' />
         </>
       )}
-      headerControls={orderInfos && (
+      headerControls={
         <>
           {showCardHeaderTags && <CardHeaderTags project={project} />}
-          <hr style={{ alignSelf: 'stretch' }} />
-          <SwapUpControl project={project} orderInfos={orderInfos} show="onlyIcon" />
-          <SwapDownControl project={project} orderInfos={orderInfos} show="onlyIcon" />
+          {orderInfos && (
+            <>
+              <hr style={{ alignSelf: 'stretch' }} />
+              <SwapUpControl project={project} orderInfos={orderInfos} show="onlyIcon" />
+              <SwapDownControl project={project} orderInfos={orderInfos} show="onlyIcon" />
+            </>
+          )}
         </>
-      )}
+      }
       content={<ProjectCardContent project={project} />}
       popOverContent={<ProjectCardContent project={project} showCardHeaderTags={false} actionsStartIndentLevelZero />}
       popOverControls={

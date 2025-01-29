@@ -89,7 +89,7 @@ export function textProjectToText(project: TextProject): string {
 
 // --- Text Json Repository Utils ---
 
-function isTextProjectPeriodic(textProject: TextProject): boolean {
+export function isTextProjectPeriodic(textProject: TextProject): boolean {
   return textProject.title.match(/- .*?#periodic/) !== null;
 }
 
