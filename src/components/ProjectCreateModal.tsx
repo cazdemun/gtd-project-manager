@@ -53,7 +53,7 @@ const ProjectCreateModal: React.FC<ProjectCreateModalProps> = () => {
       footer={
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
           <Button onClick={processProjects} loading={loading}>Process</Button>
-          <Button onClick={createProjects} loading={loading}>Create</Button>
+          <Button onClick={createProjects} loading={loading} disabled={potentialProjects.length < 1}>Create</Button>
           <button onClick={closeModal}>Cancel</button>
         </div>
       }
