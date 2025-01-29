@@ -1,9 +1,9 @@
 import React from "react";
-import LinealDatePicker from "./LinealDatePicker";
 import { Col, Row } from "@/app/ui";
 import { useSelector } from "@xstate/react";
 import { ProjectActor } from "@/app/resources";
 import { isProjectDone, isProjectIncubated, isProjectPending } from "@/utils";
+import LinealDatePicker, { doneFilterDisableNextDay, doneFilterRule } from "./LinealDatePicker";
 
 interface FilterBarProps {
   filterState: FilterState;
@@ -78,7 +78,12 @@ const FilterBar: React.FC<FilterBarProps> = ({
           {filterState.progressState === 'done' && (
             <Row gap={[10, 5]} centerY>
               <h4>Done date:</h4>
-              <LinealDatePicker initialValue={filterState.doneDate} onValueChange={setDoneDate} />
+              <LinealDatePicker
+                initialValue={filterState.doneDate}
+                onValueChange={setDoneDate}
+                rules={[doneFilterRule]}
+                disableGoNextDay={doneFilterDisableNextDay}
+              />
             </Row>
           )}
         </Row>

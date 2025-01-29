@@ -3,7 +3,8 @@ import Modal from '@/app/ui/Modal';
 import { useSelector } from '@xstate/react';
 import { ProjectActor, ProjectUIActor } from '@/app/resources';
 import { textProjectToText, textToTextProject } from '@/utils/repository';
-import { Button, TextArea } from '@/app/ui';
+import { Button, Row, TextArea } from '@/app/ui';
+import LinealDatePicker, { doneFilterDisableNextDay, doneFilterRule } from './LinealDatePicker';
 
 type ProjectUpdateModalProps = object
 
@@ -15,10 +16,12 @@ const ProjectUpdateModal: React.FC<ProjectUpdateModalProps> = () => {
   const loading = fetchingProjects || updatingProjects;
 
   const [text, setText] = useState('');
+  const [doneDate, setDoneDate] = useState<number | undefined>(selectedProject?.done);
 
   useEffect(() => {
     if (!selectedProject) return;
     setText(textProjectToText(selectedProject));
+    setDoneDate(selectedProject.done);
   }, [selectedProject]);
 
 
@@ -27,8 +30,9 @@ const ProjectUpdateModal: React.FC<ProjectUpdateModalProps> = () => {
   }
 
   const updateProject = () => {
-    const updatedProject = textToTextProject(text);
+    const updatedProject = textToTextProject(text) as Project;
     if (!updatedProject) return;
+    if (doneDate) updatedProject.done = doneDate;
     ProjectActor.send({ type: 'UPDATE', updatedResources: updatedProject, afterUpdate: closeModal });
   };
 
@@ -57,6 +61,21 @@ const ProjectUpdateModal: React.FC<ProjectUpdateModalProps> = () => {
         onChange={(e) => setText(e.target.value)}
         style={{ width: '100%', height: '200px' }}
       />
+      {doneDate && (
+        <>
+          <hr />
+          <Row gap={[10, 5]} centerY>
+            <label>Done date:</label>
+            <LinealDatePicker
+              initialValue={doneDate}
+              onValueChange={setDoneDate}
+              rules={[doneFilterRule]}
+              disableGoNextDay={doneFilterDisableNextDay}
+            />
+          </Row>
+        </>
+      )}
+
     </Modal>
   );
 };

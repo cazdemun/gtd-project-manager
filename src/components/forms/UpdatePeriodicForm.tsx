@@ -1,7 +1,7 @@
 import { ProjectActor } from "@/app/resources";
 import React, { useEffect, useState } from "react";
-import LinealDatePicker from "../LinealDatePicker";
 import LinealInputNumber from "../LinealInputNumber";
+import LinealDatePicker from "../LinealDatePicker";
 
 type UpdatePeriodicDataFormProps = {
   project: Project;
@@ -43,7 +43,7 @@ const UpdatePeriodicForm: React.FC<UpdatePeriodicDataFormProps> = ({ project }) 
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <label>Scheduled</label>
-          <LinealDatePicker initialValue={scheduled} onValueChange={setScheduled} mode="input" />
+          <LinealDatePicker initialValue={scheduled} onValueChange={setScheduled} />
         </div >
         <button type='submit'>Update Periodic Data</button>
       </form >
