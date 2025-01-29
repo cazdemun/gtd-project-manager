@@ -1,5 +1,5 @@
 import React from "react";
-import { Row } from "@/app/ui";
+import { Col, Row } from "@/app/ui";
 import CardHeaderTags from "../CardHeaderTags";
 import BaseProjectCard from "./BaseProjectCard";
 import { EditProjectControl, CopyPasteControl, DeleteProjectControl, SwapTopControl, SwapBottomControl, SwapUpControl, SwapDownControl, DonePeriodicControl, PendingPeriodicControl } from "../controls";
@@ -50,24 +50,23 @@ const PeriodicCardContent: React.FC<PeriodicCardContentProps> = ({ project, acti
 
 type PeriodicCardControlsProps = {
   project: Project;
-  showCardHeaderTags?: boolean;
   showProgressControls?: boolean;
   orderInfos?: OrderInfo[];
 }
 
-const PeriodicCardControls: React.FC<PeriodicCardControlsProps> = ({ project, orderInfos, showCardHeaderTags, showProgressControls }) => {
+const PeriodicCardHeaderControls: React.FC<PeriodicCardControlsProps> = ({ project, orderInfos, showProgressControls }) => {
   const records = useSelector(RecordActor, ({ context }) => context.resources);
   const wasDoneToday = wasPeriodicDoneToday(project, records);
   const showDonePeriodicControl = showProgressControls && wasDoneToday !== undefined && !wasDoneToday;
   const showPendingPeriodicControl = showProgressControls && wasDoneToday !== undefined && wasDoneToday;
   return (
-    <>
-      <Row gap={4}>
+    <Row gap={5} centerY>
+      <Col>
         {showDonePeriodicControl && (<DonePeriodicControl project={project} show='onlyIcon' />)}
         {showPendingPeriodicControl && (<PendingPeriodicControl project={project} show='onlyIcon' />)}
         <EditProjectControl project={project} show='onlyIcon' />
-      </Row>
-      {showCardHeaderTags && <CardHeaderTags project={project} />}
+      </Col>
+      {/* {showCardHeaderTags && <CardHeaderTags project={project} />} */}
       {orderInfos && (
         <>
           <hr style={{ alignSelf: 'stretch' }} />
@@ -75,7 +74,7 @@ const PeriodicCardControls: React.FC<PeriodicCardControlsProps> = ({ project, or
           <SwapDownControl project={project} orderInfos={orderInfos} show="onlyIcon" />
         </>
       )}
-    </>
+    </Row>
   );
 }
 
@@ -96,9 +95,11 @@ const PeriodicCard: React.FC<PeriodicCardProps> = ({ project, showCardHeaderTags
   const daysFromTodayUntilNextDate = showDaysUntilNextDate ? `(${daysFromToday(nextDate)})` : '';
   return (
     <BaseProjectCard
+      headerType="periodic"
       className={project.periodicData?.period === 1 ? styles["daily"] : ''}
       title={<h5>{`${title} ${daysFromTodayUntilNextDate}`}</h5>}
-      headerControls={<PeriodicCardControls project={project} orderInfos={orderInfos} showCardHeaderTags={showCardHeaderTags} showProgressControls={showProgressControls} />}
+      headerControls={<PeriodicCardHeaderControls project={project} orderInfos={orderInfos} showProgressControls={showProgressControls} />}
+      innerHeaderControls={showCardHeaderTags && <div><CardHeaderTags project={project} /></div>}
       project={project}
       content={<PeriodicCardContent project={project} />}
       popOverContent={(

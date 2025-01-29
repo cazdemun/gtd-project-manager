@@ -132,7 +132,7 @@ const CardHeaderTags: React.FC<CardHeaderTagsProps> = ({ project, showPopover = 
         </div>
       ) : null}
     >
-      <Row gap={10} centerY style={{ cursor: showPopover ? 'pointer' : 'text' }}>
+      <Row gap={10} centerY style={{ cursor: showPopover ? 'pointer' : 'text', flexWrap: 'wrap' }}>
         {project.tags.length > 0
           ? project.tags.map((tag, i) => (<pre key={i}>{tag}</pre>))
           : (<pre>[no tags]</pre>)

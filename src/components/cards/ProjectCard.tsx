@@ -67,8 +67,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, showCardHeaderTags, 
       )}
       headerControls={
         <>
-          {project.done && <pre>{format(project.done, DATE_FORMAT)}</pre>}
           {showCardHeaderTags && <CardHeaderTags project={project} />}
+          {project.done && <pre>{format(project.done, DATE_FORMAT)}</pre>}
           {orderInfos && (
             <>
               <hr style={{ alignSelf: 'stretch' }} />
