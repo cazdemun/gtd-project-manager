@@ -146,26 +146,26 @@ export const getNextDate = (project: Project, records: DoneRecord[]): number | u
 
   const scheduled = project.periodicData.scheduled;
   const period = project.periodicData.period;
-  const noPeriod = period === undefined || period === null || period < 1;
-  const isDoneToday = wasPeriodicDoneToday(project, records);
 
-  // TODO: Case when schedule was done before today
-  // Scheduled day takes priority over every other calculation
-  // If scheduled date is expired but there is no period, return the expired scheduled date, that way we can calculate past due projects
-  // We should ignore the scheduled also if the project was already done that day
-  if (scheduled && !isDoneToday) {
-    const isScheduledExpired = isBeforeByDay(scheduled, new Date());
-    if (!isScheduledExpired) return scheduled;
-    if (isScheduledExpired && noPeriod) return scheduled;
-  }
+  const noPeriod = period === undefined || period === null || period < 1;
+  const lastRecord = getLastRecord(project, records);
+  const noNextDateFromPeriod = noPeriod || !lastRecord;
+
+  const wasDoneToday = wasPeriodicDoneToday(project, records);
+
+  /**
+   * Schedule takes priority when:
+   * 1. The schedule date is after today
+   * 2. The schedule date is today but the project was not done yet
+   * 3. The schedule date was before today but there is not a last record or period (both must be present to calculate the next date)
+   */
+  if (scheduled && isAfterByDay(scheduled, new Date())) return scheduled;
+  if (scheduled && isToday(scheduled) && !wasDoneToday) return scheduled;
+  if (scheduled && isBeforeByDay(scheduled, new Date()) && noNextDateFromPeriod) return scheduled;
 
   // With no schedule nor a valid period, we return undefined
-  if (noPeriod) return undefined;
-
-  const lastRecord = getLastRecord(project, records);
-
   // With no record we can't calculate the next date even if we have a period
-  if (!lastRecord) return undefined;
+  if (noNextDateFromPeriod) return undefined;
 
   return addDays(lastRecord.date, period).getTime();
 }
