@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { format, parse, isValid, addDays, subDays, isToday } from 'date-fns';
 import { AiFillCaretLeft, AiFillCaretRight, AiOutlineClear, AiOutlineReload } from 'react-icons/ai';
 import { DATE_FORMAT, isAfterByDay } from '@/utils/dates';
@@ -46,6 +46,12 @@ const LinealDatePicker: React.FC<LinealDatePickerProps> = ({ rules: _rules = [],
     const today = new Date().setHours(0, 0, 0, 0);
     _updateValues(addDays(today, offset).getTime());
   }
+
+  useEffect(() => {
+    if (!initialValue) return;
+    setNumericValue(initialValue);
+    setInputValue(format(initialValue, DATE_FORMAT));
+  }, [initialValue]);
 
   /**
    * Text must always change, howev
