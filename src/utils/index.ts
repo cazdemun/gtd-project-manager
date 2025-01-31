@@ -3,6 +3,16 @@ import { isAfterByDay, isBeforeByDay, isDoneDate } from './dates';
 import { addDays, differenceInDays, isToday, startOfDay } from 'date-fns';
 import { RAW_PROJECT_REGEX } from './constants';
 
+export const traceTag = <T>(tag: string) => (value: T): T => {
+  console.log(tag, value);
+  return value;
+}
+
+export const trace = <T>(value: T): T => {
+  console.log(value);
+  return value;
+}
+
 export function isNullish<T>(value: T | null | undefined): value is null | undefined {
   return value === null || value === undefined;
 }

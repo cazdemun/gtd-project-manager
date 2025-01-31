@@ -50,7 +50,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
       {progressStateFilter && (
         <Row gap={[10, 8]} centerY style={{ padding: "0px 8px", flexWrap: "wrap" }}>
-          <h4>Progress State:</h4>
+          <h4>Progress state:</h4>
           <button
             onClick={() => setProgressStatus('all')}
             style={{ fontWeight: computeWeight(filterState.progressState, 'all') }}
@@ -92,7 +92,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
       {tagStateFilter && progressStateFilter && < hr />}
       {tagStateFilter && (
         <Row gap={[10, 8]} centerY style={{ padding: "0px 8px", flexWrap: "wrap" }}>
-          <h4>Tag State</h4>
+          <h4>Tag state</h4>
           <button
             onClick={() => setTagStatus('all')}
             style={{ fontWeight: computeWeight(filterState.tagState, 'all') }}
