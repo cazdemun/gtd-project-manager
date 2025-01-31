@@ -1,5 +1,5 @@
 import React from "react";
-import { Paragraph, Row } from "@/app/ui";
+import { Row, Text } from "@/app/ui";
 import CardHeaderTags from "../CardHeaderTags";
 import BaseProjectCard from "./BaseProjectCard";
 import { EditProjectControl, CopyPasteControl, DeleteProjectControl, ProgressProjectControls, SwapTopControl, SwapBottomControl, SwapUpControl, SwapDownControl } from "../controls";
@@ -32,11 +32,7 @@ const ProjectCardContent: React.FC<ProjectCardContentProps> = ({ project, action
       )}
       {project.description && (
         <div>
-          {project.description.split('\n').map((line, index) => (
-            <Paragraph key={index} style={{ whiteSpace: 'pre-wrap', fontSize: '14px' }}>
-              {line}
-            </Paragraph>
-          ))}
+          <Text>{project.description}</Text>
         </div>
       )}
       {showCardHeaderTags && (

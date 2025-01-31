@@ -1,16 +1,16 @@
 import React from "react";
-import { Col, Row } from "@/app/ui";
-import CardHeaderTags from "../CardHeaderTags";
-import BaseProjectCard from "./BaseProjectCard";
-import { EditProjectControl, CopyPasteControl, DeleteProjectControl, SwapTopControl, SwapBottomControl, SwapUpControl, SwapDownControl, DonePeriodicControl, PendingPeriodicControl } from "../controls";
+import { format } from "date-fns";
+import { Col, Row, Text } from "@/app/ui";
 import { daysFromToday, getTitleText, getLastDoneDate, getNextDate, wasPeriodicDoneToday } from "@/utils";
 import { useSelector } from "@xstate/react";
 import { RecordActor } from "@/app/resources";
+import { DATE_FORMAT } from "@/utils/dates";
+import BaseProjectCard from "./BaseProjectCard";
+import CardHeaderTags from "../CardHeaderTags";
+import { EditProjectControl, CopyPasteControl, DeleteProjectControl, SwapTopControl, SwapBottomControl, SwapUpControl, SwapDownControl, DonePeriodicControl, PendingPeriodicControl } from "../controls";
+import UpdatePeriodicForm from "../forms/UpdatePeriodicForm";
 
 import styles from "./PeriodicCard.module.scss";
-import UpdatePeriodicForm from "../forms/UpdatePeriodicForm";
-import { format } from "date-fns";
-import { DATE_FORMAT } from "@/utils/dates";
 
 type PeriodicCardContentProps = {
   project: Project;
@@ -32,11 +32,7 @@ const PeriodicCardContent: React.FC<PeriodicCardContentProps> = ({ project, acti
       )}
       {project.description && (
         <div>
-          {project.description.split('\n').map((line, index) => (
-            <p key={index} style={{ whiteSpace: 'pre-wrap', fontSize: '14px' }}>
-              {line}
-            </p>
-          ))}
+          <Text>{project.description}</Text>
         </div>
       )}
       {showCardHeaderTags && (
