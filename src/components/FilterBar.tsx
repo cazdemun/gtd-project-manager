@@ -4,13 +4,15 @@ import { useSelector } from "@xstate/react";
 import { ProjectActor } from "@/app/resources";
 import { isProjectDone, isProjectIncubated, isProjectPending } from "@/utils";
 import LinealDatePicker, { doneFilterDisableNextDay, doneFilterRule } from "./LinealDatePicker";
+import useConditionalLocalStorage from "@/hooks/useConditionalLocalStorage";
 
 interface FilterBarProps {
   filterState: FilterState;
   updateFilterState: (arg: SetFilterStateArg) => void;
-
   progressStateFilter?: boolean;
   tagStateFilter?: boolean;
+  // This props is for using useLocalStorage hook
+  storageKey?: string;
 }
 
 const FilterBar: React.FC<FilterBarProps> = ({
@@ -18,7 +20,10 @@ const FilterBar: React.FC<FilterBarProps> = ({
   updateFilterState,
   progressStateFilter,
   tagStateFilter,
+  storageKey,
 }) => {
+  const [showFilters, setShowFilters] = useConditionalLocalStorage(storageKey, false);
+
   const projects = useSelector(ProjectActor, ({ context }) => context.resources);
   const allLength = projects.length;
   const doneLength = projects.filter(isProjectDone).length;
@@ -27,6 +32,10 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
   const taglessLength = projects.filter((project) => project.tags.length < 1).length;
   const taggedLength = projects.filter((project) => project.tags.length > 0).length;
+
+  const toogleShowFilters = () => {
+    setShowFilters((prev) => !prev);
+  }
 
   function setProgressStatus(progressState: FilterState['progressState']) {
     updateFilterState({ progressState });
@@ -44,9 +53,15 @@ const FilterBar: React.FC<FilterBarProps> = ({
     return stateProperty === stateValue ? 'bold' : 'normal';
   }
 
+  if (!showFilters) return (
+    <Col gap={8} centerY style={{ flexWrap: "wrap", borderRadius: "5px", border: "1px solid #fff", padding: "8px" }}>
+      <h3 onClick={toogleShowFilters} style={{ cursor: "pointer" }}>Filters</h3>
+    </Col>
+  );
+
   return (
     <Col gap={8} centerY style={{ flexWrap: "wrap", borderRadius: "5px", border: "1px solid #fff", padding: "8px" }}>
-      <h3>Filters</h3>
+      <h3 onClick={toogleShowFilters} style={{ cursor: "pointer" }}>Filters</h3>
 
       {progressStateFilter && (
         <Row gap={[10, 8]} centerY style={{ padding: "0px 8px", flexWrap: "wrap" }}>
