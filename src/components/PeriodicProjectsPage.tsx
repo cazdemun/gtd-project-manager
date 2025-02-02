@@ -8,12 +8,14 @@ import { getNextDate, wasPeriodicDoneToday, isPeriodicFuture, isPeriodicPastDue,
 import PeriodicCard from './cards/PeriodicCard';
 import ProjectCard from './cards/ProjectCard';
 import useLocalStorage from '@/hooks/useLocalStorage';
-import { CONFIG_SHOW_PAST_PROJECTS } from '@/utils/constants';
+import { CONFIG_SHOW_FILTER_BAR_PERIODIC_PAGE, CONFIG_SHOW_PAST_PROJECTS } from '@/utils/constants';
 import { LuArrowLeftToLine, LuArrowRightToLine } from 'react-icons/lu';
+import { useProjectFilter } from '@/hooks/useProjectFilter';
+import FilterBar from './FilterBar';
 
 type DateConverterProps = object
 
-const DateConverter: React.FC<DateConverterProps> = () => {
+export const DateConverter: React.FC<DateConverterProps> = () => {
   const [inputValue, setInputValue] = useState('');
   const [timestamp, setTimestamp] = useState<number | undefined>(undefined);
 
@@ -71,9 +73,11 @@ const PeriodicProjectsPage: React.FC<PeriodicProjectsPageProps> = () => {
   const projects = useSelector(ProjectActor, ({ context }) => context.resources);
   const projectsMap = useSelector(ProjectActor, ({ context }) => context.resourcesMap);
   const records = useSelector(RecordActor, ({ context }) => context.resources);
-  const periodicProjects = projects.filter((project) => project.periodic);
+  const _periodicProjects = projects.filter((project) => project.periodic);
   const fetchingProjects = useSelector(ProjectActor, (state) => state.matches('fetching'));
   const [showPastProjects, setShowPastProjects] = useLocalStorage(CONFIG_SHOW_PAST_PROJECTS, true);
+
+  const { filterState, setFilterState, filteredProjects: periodicProjects } = useProjectFilter(_periodicProjects, { progressState: 'pending' });
 
   const loadProjects = () => {
     SourceActor.send({ type: 'FETCH' })
@@ -130,10 +134,12 @@ const PeriodicProjectsPage: React.FC<PeriodicProjectsPageProps> = () => {
     .sort((a, b) => b.recordDate - a.recordDate);
 
   return (
-    <>
-      <DateConverter />
-      <Button onClick={loadProjects} loading={fetchingProjects}>Load projects</Button>
-      <div style={{ padding: '20px', display: 'flex', gap: '10px' }}>
+    <Col gap={10} style={{ padding: '20px' }}>
+      <FilterBar storageKey={CONFIG_SHOW_FILTER_BAR_PERIODIC_PAGE} filterState={filterState} updateFilterState={setFilterState} tagsStateFilter />
+      <div>
+        <Button onClick={loadProjects} loading={fetchingProjects}>Load projects</Button>
+      </div>
+      <Row gap={10}>
         {showPastProjects ? (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <Row centerY>
@@ -200,8 +206,8 @@ const PeriodicProjectsPage: React.FC<PeriodicProjectsPageProps> = () => {
             ))}
           </div>
         </div>
-      </div >
-      <Col gap={10} style={{ padding: '20px' }}>
+      </Row >
+      <Col gap={10}>
         <h2>Non Periodic Projects</h2>
         <div>
           {phantomProjects.map((project) => (
@@ -209,7 +215,7 @@ const PeriodicProjectsPage: React.FC<PeriodicProjectsPageProps> = () => {
           ))}
         </div>
       </Col>
-    </>
+    </Col>
   );
 };
 

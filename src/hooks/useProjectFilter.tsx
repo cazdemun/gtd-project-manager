@@ -2,13 +2,15 @@ import { isProjectDone, isProjectIncubated, isProjectPending } from "@/utils";
 import { isDoneDate } from "@/utils/dates";
 import { useState, useMemo } from "react";
 
-export function useProjectFilter(projects: Project[], initialFilterState?: FilterState) {
+export function useProjectFilter(projects: Project[], initialFilterState?: Partial<FilterState>) {
   // A regular useState for the filter state
   const [filterState, _setFilterState] = useState<FilterState>({
     progressState: undefined,
     tagState: undefined,
     // selectedTag: undefined,
     doneDate: undefined,
+    includeTags: [],
+    excludeTags: [],
     ...initialFilterState,
   });
 
@@ -43,11 +45,13 @@ export function useProjectFilter(projects: Project[], initialFilterState?: Filte
         if (filterState.tagState === 'tagless') return project.tags.length === 0;
         if (filterState.tagState === 'tagged') return project.tags.length > 0;
         return true;
+      }).filter((project) => {
+        if (filterState.includeTags.length === 0) return true;
+        return project.tags.some((tag) => filterState.includeTags.includes(tag));
+      }).filter((project) => {
+        if (filterState.excludeTags.length === 0) return true;
+        return !project.tags.some((tag) => filterState.excludeTags.includes(tag));
       });
-    // .filter((project) => {
-    //   if (!filterState.selectedTag) return true;
-    //   return project.tags.includes(filterState.selectedTag);
-    // })
   }, [projects, filterState]);
 
   return {

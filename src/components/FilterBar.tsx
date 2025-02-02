@@ -6,11 +6,92 @@ import { isProjectDone, isProjectIncubated, isProjectPending } from "@/utils";
 import LinealDatePicker, { doneFilterDisableNextDay, doneFilterRule } from "./LinealDatePicker";
 import useConditionalLocalStorage from "@/hooks/useConditionalLocalStorage";
 
+type TagsFilterComponentProps = {
+  filterState: FilterState;
+  updateFilterState: (arg: Partial<FilterState>) => void;
+};
+
+const TagsFilterComponent: React.FC<TagsFilterComponentProps> = ({
+  filterState,
+  updateFilterState,
+}) => {
+  // Retrieve all tags from projects.
+  const projects = useSelector(ProjectActor, ({ context }) => context.resources);
+  const allTags = [...new Set(projects.flatMap((project) => project.tags))];
+
+  // Compute the available tags:
+  // - For "Include", we display all tags that are not excluded.
+  // - For "Exclude", we display all tags that are not included.
+  const availableIncludeTags = allTags.filter((tag) => !filterState.excludeTags.includes(tag));
+  const availableExcludeTags = allTags.filter((tag) => !filterState.includeTags.includes(tag));
+
+  // Toggle a tag's "include" status.
+  const toggleIncludeTag = (tag: string) => {
+    const tagIsIncluded = filterState.includeTags.includes(tag);
+    const newIncludeTags = tagIsIncluded
+      ? filterState.includeTags.filter((t) => t !== tag)
+      : [...filterState.includeTags, tag]
+    const newExcludeTags = filterState.excludeTags.filter((t) => t !== tag);
+    updateFilterState({
+      // We clear out any tags that are no longer available.
+      includeTags: newIncludeTags.filter((t) => allTags.includes(t)),
+      excludeTags: newExcludeTags.filter((t) => allTags.includes(t)),
+    });
+  };
+
+  // Toggle a tag's "exclude" status.
+  const toggleExcludeTag = (tag: string) => {
+    const tagIsExcluded = filterState.excludeTags.includes(tag);
+    const newExcludeTags = tagIsExcluded
+      ? filterState.excludeTags.filter((t) => t !== tag)
+      : [...filterState.excludeTags, tag];
+    const newIncludeTags = filterState.includeTags.filter((t) => t !== tag);
+    updateFilterState({
+      // We clear out any tags that are no longer available.
+      includeTags: newIncludeTags.filter((t) => allTags.includes(t)),
+      excludeTags: newExcludeTags.filter((t) => allTags.includes(t)),
+    });
+  };
+
+  const sortByState = (tagArray: string[]) => (a: string, b: string) => {
+    const valueA = tagArray.includes(a) ? 0 : 1
+    const valueB = tagArray.includes(b) ? 0 : 1
+    return valueA - valueB
+  };
+
+  return (
+    <Col gap={10}>
+      <Row gap={[10, 8]} centerY style={{ padding: '0px 8px', flexWrap: 'wrap' }}>
+        <h4>Include Tags:</h4>
+        {availableIncludeTags.sort()
+          .sort(sortByState(filterState.includeTags))
+          .map((tag) => (
+            <button key={tag} onClick={() => toggleIncludeTag(tag)}          >
+              {filterState.includeTags.includes(tag) ? <strong>{`${tag} (x)`}</strong> : tag}
+            </button>
+          ))}
+      </Row>
+
+      <Row gap={[10, 8]} centerY style={{ padding: '0px 8px', flexWrap: 'wrap' }}>
+        <h4>Exclude Tags:</h4>
+        {availableExcludeTags.sort()
+          .sort(sortByState(filterState.excludeTags))
+          .map((tag) => (
+            <button key={tag} onClick={() => toggleExcludeTag(tag)}          >
+              {filterState.excludeTags.includes(tag) ? <strong>{`${tag} (x)`}</strong> : tag}
+            </button>
+          ))}
+      </Row>
+    </Col>
+  );
+};
+
 interface FilterBarProps {
   filterState: FilterState;
   updateFilterState: (arg: SetFilterStateArg) => void;
   progressStateFilter?: boolean;
   tagStateFilter?: boolean;
+  tagsStateFilter?: boolean;
   // This props is for using useLocalStorage hook
   storageKey?: string;
 }
@@ -20,6 +101,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
   updateFilterState,
   progressStateFilter,
   tagStateFilter,
+  tagsStateFilter,
   storageKey,
 }) => {
   const [showFilters, setShowFilters] = useConditionalLocalStorage(storageKey, false);
@@ -62,7 +144,6 @@ const FilterBar: React.FC<FilterBarProps> = ({
   return (
     <Col gap={8} centerY style={{ flexWrap: "wrap", borderRadius: "5px", border: "1px solid #fff", padding: "8px" }}>
       <h3 onClick={toogleShowFilters} style={{ cursor: "pointer" }}>Filters</h3>
-
       {progressStateFilter && (
         <Row gap={[10, 8]} centerY style={{ padding: "0px 8px", flexWrap: "wrap" }}>
           <h4>Progress state:</h4>
@@ -128,28 +209,9 @@ const FilterBar: React.FC<FilterBarProps> = ({
           </button>
         </Row>
       )}
-
-      {/* 
-      {tagFilter && (
-        <div>
-          <h4>Specific Tag</h4>
-          <select
-            value={filterState.selectedTag ?? ""}
-            onChange={(e) => {
-              // If empty string is selected, set to undefined
-              const newTag = e.target.value || undefined;
-              setSelectedTag(newTag);
-            }}
-          >
-            <option value="">-- All Tags --</option>
-            {availableTags.map((tag) => (
-              <option key={tag} value={tag}>
-                {tag}
-              </option>
-            ))}
-          </select>
-        </div>
-      )} */}
+      {tagsStateFilter && (
+        <TagsFilterComponent filterState={filterState} updateFilterState={updateFilterState} />
+      )}
     </Col>
   );
 };

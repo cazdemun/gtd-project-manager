@@ -2,7 +2,8 @@ type FilterState = {
   progressState?: 'all' | 'done' | 'pending' | 'incubated';
   doneDate?: number;
   tagState?: 'all' | 'tagless' | 'tagged';
-  // selectedTag?: string;
+  includeTags: string[];
+  excludeTags: string[];
 }
 
 type SetFilterStateArg =
