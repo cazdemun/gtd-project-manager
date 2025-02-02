@@ -4,7 +4,7 @@ import { getTitleText } from "@/utils";
 
 import styles from "./BaseProjectCard.module.scss";
 
-type BaseProjectCardProps = {
+type BaseProjectCardProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'content' | 'title'> & {
   project: Project;
   className?: string;
   children?: React.ReactNode;
@@ -17,7 +17,7 @@ type BaseProjectCardProps = {
   headerType?: 'normal' | 'periodic'
 }
 
-export const BaseProjectCard: React.FC<BaseProjectCardProps> = ({ className: _className, children, title, project, content, innerHeaderControls, headerControls, popOverContent, popOverControls, headerType = 'normal' }) => {
+export const BaseProjectCard: React.FC<BaseProjectCardProps> = ({ className: _className, children, title, project, content, innerHeaderControls, headerControls, popOverContent, popOverControls, headerType = 'normal', ...props }) => {
   const [showDetails, setShowDetails] = useState(false);
 
   const titleText = getTitleText(project.title);
@@ -49,19 +49,21 @@ export const BaseProjectCard: React.FC<BaseProjectCardProps> = ({ className: _cl
   const PeriodicCardHeader = () => (
     <Row gap={10} centerY>
       <Col centerY style={{ flex: '1' }}>
-        <Popover
-          content={showPopOver ? (
-            <Col gap={10}>
-              {popOverContent}
-              {popOverControls && <hr />}
-              {popOverControls}
-            </Col>
-          ) : null}
-        >
-          <span style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => setShowDetails((prev) => !prev)}>
-            {title ? title : <h4>{titleText}</h4>}
-          </span>
-        </Popover>
+        <div style={{ flex: 'none' }}>
+          <Popover
+            content={showPopOver ? (
+              <Col gap={10}>
+                {popOverContent}
+                {popOverControls && <hr />}
+                {popOverControls}
+              </Col>
+            ) : null}
+          >
+            <span style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => setShowDetails((prev) => !prev)}>
+              {title ? title : <h4>{titleText}</h4>}
+            </span>
+          </Popover>
+        </div>
         {innerHeaderControls}
       </Col>
       {headerControls}
@@ -71,7 +73,7 @@ export const BaseProjectCard: React.FC<BaseProjectCardProps> = ({ className: _cl
   const CardHeader = () => headerType === 'normal' ? <NormalCardHeader /> : <PeriodicCardHeader />;
 
   return (
-    <Col className={`${styles['project-card']} ${className}`} gap={10}>
+    <Col {...props} className={`${styles['project-card']} ${className}`} gap={10}>
       {children ? children : <CardHeader />}
       {showDetails && content}
     </Col>
