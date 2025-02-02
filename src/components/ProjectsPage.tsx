@@ -11,6 +11,8 @@ import ProjectCard from "./cards/ProjectCard";
 import SelectProjectCard from "./cards/SelectProjectCard";
 import FilterBar from "./FilterBar";
 import { useProjectFilter } from "@/hooks/useProjectFilter";
+import { CONFIG_SELECTED_TAB, CONFIG_SHOW_FILTER_BAR_TABBED_PANEL } from "@/utils/constants";
+import useLocalStorage from "@/hooks/useLocalStorage";
 
 import "@/styles/common.scss"
 
@@ -98,7 +100,7 @@ const TabsPanel: React.FC<TabsPanelProps> = () => {
   const { filterState, setFilterState, filteredProjects } = useProjectFilter(projects, { progressState: 'pending' });
   const [tags, pendingTags, doneTags, incubatedTags, overallTags] = getTagsAndCount(projects, filterState.doneDate);
 
-  const [tagSelected, setTagSelected] = useState<string | undefined>(undefined);
+  const [tagSelected, setTagSelected] = useLocalStorage<string | undefined>(CONFIG_SELECTED_TAB, undefined);
   const [sortByDone, setSortByDone] = useState(false);
 
   const selectMode = useSelector(AppActor, (state) => state.matches({ projectsPage: 'select' }));
@@ -163,7 +165,12 @@ const TabsPanel: React.FC<TabsPanelProps> = () => {
 
   return (
     <Col gap={10} style={{ flex: 2, overflow: 'auto' }}>
-      <FilterBar filterState={filterState} updateFilterState={setFilterState} progressStateFilter />
+      <FilterBar
+        storageKey={CONFIG_SHOW_FILTER_BAR_TABBED_PANEL}
+        filterState={filterState}
+        updateFilterState={setFilterState}
+        progressStateFilter
+      />
       <Col>
         <Row>
           <Tabs />
