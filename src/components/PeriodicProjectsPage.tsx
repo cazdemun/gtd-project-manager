@@ -3,10 +3,13 @@ import { useSelector } from '@xstate/react';
 import React, { useState } from 'react';
 import { isValid, parse } from 'date-fns';
 import { DATE_FORMAT, isBeforeByDay } from '@/utils/dates';
-import { Button, Col } from '@/app/ui';
+import { Button, Col, Row } from '@/app/ui';
 import { getNextDate, wasPeriodicDoneToday, isPeriodicFuture, isPeriodicPastDue, isPeriodicToday, isPeriodicUncategorized } from '@/utils';
 import PeriodicCard from './cards/PeriodicCard';
 import ProjectCard from './cards/ProjectCard';
+import useLocalStorage from '@/hooks/useLocalStorage';
+import { CONFIG_SHOW_PAST_PROJECTS } from '@/utils/constants';
+import { LuArrowLeftToLine, LuArrowRightToLine } from 'react-icons/lu';
 
 type DateConverterProps = object
 
@@ -49,6 +52,12 @@ const sortDailyProjectsFirst = (a: Project, b: Project) => {
   return 0;
 }
 
+const sortPinnedProjectsFirst = (a: Project, b: Project) => {
+  const pinnedA = a.periodicData?.pinned ? 1 : 0;
+  const pinnedB = b.periodicData?.pinned ? 1 : 0;
+  return pinnedB - pinnedA;
+}
+
 // Having daily projects on the future column is just clutter, unless they have a valid scheduled
 // - Scheduled (if exists) is not expired since it is a future date, and it was cheked beforehand
 // This filter is not on isPeriodicFuture, because is a separate concern
@@ -64,11 +73,16 @@ const PeriodicProjectsPage: React.FC<PeriodicProjectsPageProps> = () => {
   const records = useSelector(RecordActor, ({ context }) => context.resources);
   const periodicProjects = projects.filter((project) => project.periodic);
   const fetchingProjects = useSelector(ProjectActor, (state) => state.matches('fetching'));
+  const [showPastProjects, setShowPastProjects] = useLocalStorage(CONFIG_SHOW_PAST_PROJECTS, true);
 
   const loadProjects = () => {
     SourceActor.send({ type: 'FETCH' })
     ProjectActor.send({ type: 'FETCH' })
     RecordActor.send({ type: 'FETCH' })
+  }
+
+  const toggleShowPastProjects = () => {
+    setShowPastProjects((prev) => !prev);
   }
 
   const unCategorizedProjects = periodicProjects
@@ -87,11 +101,13 @@ const PeriodicProjectsPage: React.FC<PeriodicProjectsPageProps> = () => {
 
   const todayProjects = periodicProjects
     .filter((project) => isPeriodicToday(project, records))
-    .sort(sortDailyProjectsFirst);
+    .sort(sortDailyProjectsFirst)
+    .sort(sortPinnedProjectsFirst);
 
   const pastDueProjects = periodicProjects
     .filter((project) => isPeriodicPastDue(project, records))
-    .sort(sortDailyProjectsFirst);
+    .sort(sortDailyProjectsFirst)
+    .sort(sortPinnedProjectsFirst);
 
   const uniqueIds = new Set<string>([
     ...unCategorizedProjects.map((project) => project._id),
@@ -118,26 +134,35 @@ const PeriodicProjectsPage: React.FC<PeriodicProjectsPageProps> = () => {
       <DateConverter />
       <Button onClick={loadProjects} loading={fetchingProjects}>Load projects</Button>
       <div style={{ padding: '20px', display: 'flex', gap: '10px' }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <h3>Past Projects</h3>
-          <div>
-            {pastProjects.map((project, index) => (
-              <PeriodicCard
-                key={`${project._id}-${index}`}
-                project={project}
-                showCardHeaderTags
-                showProgressControls={false}
-                recordDate={project.recordDate}
-              />
-            ))}
+        {showPastProjects ? (
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <Row centerY>
+              <h3 style={{ flex: 1 }}>Past Projects</h3>
+              <Button className='icon-button' onClick={toggleShowPastProjects}><LuArrowLeftToLine /></Button>
+            </Row>
+            <div>
+              {pastProjects.map((project, index) => (
+                <PeriodicCard
+                  key={`${project._id}-${index}`}
+                  project={project}
+                  showCardHeaderTags
+                  showProgressControls={false}
+                  recordDate={project.recordDate}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div style={{ flex: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <Button className='icon-button' onClick={toggleShowPastProjects}><LuArrowRightToLine /></Button>
+          </div>
+        )}
         <hr />
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <h3>Past Due Projects</h3>
           <div>
             {pastDueProjects.map((project) => (
-              <PeriodicCard key={project._id} project={project} showCardHeaderTags showDaysUntilNextDate />
+              <PeriodicCard key={project._id} project={project} showCardHeaderTags showDaysUntilNextDate showPinControl />
             ))}
           </div>
         </div>
@@ -145,7 +170,7 @@ const PeriodicProjectsPage: React.FC<PeriodicProjectsPageProps> = () => {
           <h3>Today Projects</h3>
           <div>
             {todayProjects.map((project) => (
-              <PeriodicCard key={project._id} project={project} showCardHeaderTags />
+              <PeriodicCard key={project._id} project={project} showCardHeaderTags showPinControl />
             ))}
           </div>
         </div>
@@ -175,7 +200,7 @@ const PeriodicProjectsPage: React.FC<PeriodicProjectsPageProps> = () => {
             ))}
           </div>
         </div>
-      </div>
+      </div >
       <Col gap={10} style={{ padding: '20px' }}>
         <h2>Non Periodic Projects</h2>
         <div>

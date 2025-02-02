@@ -21,3 +21,6 @@ export const RAW_PROJECT_DESCRIPTION_REGEX = /(?:^[ \t]*-.*?\n)+(.*?)(?=^<!--ID:
 export const RAW_PROJECT_TAGS_REGEX = /^#.*?(?=^<!--ID:)/gms;
 
 export const VALID_TAG_REGEX = /^(?:[a-zA-Z]+[-])*[a-zA-Z]+$/;
+
+// Config constants
+export const CONFIG_SHOW_PAST_PROJECTS = 'CONFIG_SHOW_PAST_PROJECTS';
