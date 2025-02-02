@@ -5,3 +5,4 @@ export { DoneProjectControl, PendingProjectControl, IncubatedProjectControl, Pro
 export { SwapUpControl, SwapDownControl, SwapTopControl, SwapBottomControl } from './SwapProjectOrderControls';
 export { default as DonePeriodicControl } from './DonePeriodicControl';
 export { default as PendingPeriodicControl } from './PendingPeriodicControl';
+export { default as PeriodicPinControl } from './PeriodicPinControl';

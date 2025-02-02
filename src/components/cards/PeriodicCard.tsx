@@ -1,13 +1,13 @@
 import React from "react";
 import { format } from "date-fns";
-import { Col, Row, Text } from "@/app/ui";
+import { Row, Text } from "@/app/ui";
 import { daysFromToday, getTitleText, getLastDoneDate, getNextDate, wasPeriodicDoneToday } from "@/utils";
 import { useSelector } from "@xstate/react";
 import { RecordActor } from "@/app/resources";
 import { DATE_FORMAT } from "@/utils/dates";
 import BaseProjectCard from "./BaseProjectCard";
 import CardHeaderTags from "../CardHeaderTags";
-import { EditProjectControl, CopyPasteControl, DeleteProjectControl, SwapTopControl, SwapBottomControl, SwapUpControl, SwapDownControl, DonePeriodicControl, PendingPeriodicControl } from "../controls";
+import { EditProjectControl, CopyPasteControl, DeleteProjectControl, SwapTopControl, SwapBottomControl, SwapUpControl, SwapDownControl, DonePeriodicControl, PendingPeriodicControl, PeriodicPinControl } from "../controls";
 import UpdatePeriodicForm from "../forms/UpdatePeriodicForm";
 
 import styles from "./PeriodicCard.module.scss";
@@ -46,23 +46,22 @@ const PeriodicCardContent: React.FC<PeriodicCardContentProps> = ({ project, acti
 
 type PeriodicCardControlsProps = {
   project: Project;
-  showProgressControls?: boolean;
+  showProgressControls: boolean;
+  showPinControl: boolean;
   orderInfos?: OrderInfo[];
 }
 
-const PeriodicCardHeaderControls: React.FC<PeriodicCardControlsProps> = ({ project, orderInfos, showProgressControls }) => {
+const PeriodicCardHeaderControls: React.FC<PeriodicCardControlsProps> = ({ project, orderInfos, showPinControl, showProgressControls }) => {
   const records = useSelector(RecordActor, ({ context }) => context.resources);
   const wasDoneToday = wasPeriodicDoneToday(project, records);
   const showDonePeriodicControl = showProgressControls && wasDoneToday !== undefined && !wasDoneToday;
   const showPendingPeriodicControl = showProgressControls && wasDoneToday !== undefined && wasDoneToday;
   return (
-    <Row gap={5} centerY>
-      <Col>
-        {showDonePeriodicControl && (<DonePeriodicControl project={project} show='onlyIcon' />)}
-        {showPendingPeriodicControl && (<PendingPeriodicControl project={project} show='onlyIcon' />)}
-        <EditProjectControl project={project} show='onlyIcon' />
-      </Col>
-      {/* {showCardHeaderTags && <CardHeaderTags project={project} />} */}
+    <Row gap={0} centerY>
+      {showPinControl && (<PeriodicPinControl project={project} show='onlyIcon' />)}
+      {showDonePeriodicControl && (<DonePeriodicControl project={project} show='onlyIcon' />)}
+      {showPendingPeriodicControl && (<PendingPeriodicControl project={project} show='onlyIcon' />)}
+      <EditProjectControl project={project} show='onlyIcon' />
       {orderInfos && (
         <>
           <hr style={{ alignSelf: 'stretch' }} />
@@ -78,12 +77,14 @@ type PeriodicCardProps = {
   project: Project;
   showCardHeaderTags?: boolean;
   showProgressControls?: boolean;
-  orderInfos?: OrderInfo[];
+  showPinControl?: boolean;
   showDaysUntilNextDate?: boolean;
   recordDate?: number;
+  // Not implemented yet for periodic
+  orderInfos?: OrderInfo[];
 }
 
-const PeriodicCard: React.FC<PeriodicCardProps> = ({ project, showCardHeaderTags, orderInfos, recordDate, showProgressControls = true, showDaysUntilNextDate = false }) => {
+const PeriodicCard: React.FC<PeriodicCardProps> = ({ project, showCardHeaderTags, orderInfos, recordDate, showPinControl = false, showProgressControls = true, showDaysUntilNextDate = false }) => {
   const records = useSelector(RecordActor, ({ context }) => context.resources);
   const title = getTitleText(project.title, true);
   const lastDate = getLastDoneDate(project, records);
@@ -91,11 +92,12 @@ const PeriodicCard: React.FC<PeriodicCardProps> = ({ project, showCardHeaderTags
   const daysFromTodayUntilNextDate = showDaysUntilNextDate ? `(${daysFromToday(nextDate)})` : '';
   return (
     <BaseProjectCard
+      style={{ padding: '4px' }}
       headerType="periodic"
       className={project.periodicData?.period === 1 ? styles["daily"] : ''}
       title={<h5>{`${title} ${daysFromTodayUntilNextDate}`}</h5>}
-      headerControls={<PeriodicCardHeaderControls project={project} orderInfos={orderInfos} showProgressControls={showProgressControls} />}
       innerHeaderControls={showCardHeaderTags && <div><CardHeaderTags project={project} /></div>}
+      headerControls={<PeriodicCardHeaderControls project={project} orderInfos={orderInfos} showPinControl={showPinControl} showProgressControls={showProgressControls} />}
       project={project}
       content={<PeriodicCardContent project={project} />}
       popOverContent={(

@@ -12,6 +12,7 @@ type Project = {
   periodicData?: {
     scheduled?: number;
     period?: number;
+    pinned?: boolean;
   }
   // completed
   // scheduled
