@@ -28,7 +28,7 @@ const BulkOperationsBar: React.FC<BulkOperationsBarProps> = () => {
   const [newTag, setNewTag] = useState('');
   const [error, setError] = useState<string>('');
 
-  const selectMode = useSelector(AppActor, (state) => state.matches({ projectsPage: 'select' }));
+  const selectMode = useSelector(AppActor, (state) => state.matches({ projectsPage: 'select' }) || state.matches({ periodicProjectsPage: 'select' }));
   const selectedProjects = useSelector(AppActor, (state) => state.context.selectedProjectIds);
 
   const projects = useSelector(ProjectActor, (state) => state.context.resources);
@@ -172,7 +172,7 @@ const BulkOperationsBar: React.FC<BulkOperationsBarProps> = () => {
                 >
                   <input
                     type="text" placeholder="New tag"
-                    style={{ borderColor: error !== '' ? 'red' : 'gray', width: '200px', padding: '0px 5px' }}  
+                    style={{ borderColor: error !== '' ? 'red' : 'gray', width: '200px', padding: '0px 5px' }}
                     value={newTag}
                     onChange={(e) => {
                       setNewTag(e.target.value);
