@@ -11,7 +11,7 @@ import ProjectCard from "./cards/ProjectCard";
 import SelectProjectCard from "./cards/SelectProjectCard";
 import FilterBar from "./FilterBar";
 import { useProjectFilter } from "@/hooks/useProjectFilter";
-import { CONFIG_SELECTED_TAB, CONFIG_SHOW_FILTER_BAR_TABBED_PANEL } from "@/utils/constants";
+import { CONFIG_SELECTED_TAB, CONFIG_SHOW_FILTER_BAR_TABBED_PANEL, CONFIG_SHOW_PROJECTS_PANEL } from "@/utils/constants";
 import useLocalStorage from "@/hooks/useLocalStorage";
 
 import "@/styles/common.scss"
@@ -19,7 +19,7 @@ import "@/styles/common.scss"
 type ProjectsPanelProps = object;
 
 const ProjectsPanel: React.FC<ProjectsPanelProps> = () => {
-  const [collapsedList, setCollapsedList] = useState(false);
+  const [showList, setShowList] = useLocalStorage(CONFIG_SHOW_PROJECTS_PANEL, true);
 
   const projects = useSelector(ProjectActor, ({ context }) => context.resources);
   const { filterState, setFilterState, filteredProjects } = useProjectFilter(projects, { progressState: 'all', tagState: 'tagless' });
@@ -29,12 +29,12 @@ const ProjectsPanel: React.FC<ProjectsPanelProps> = () => {
 
   const fetchingProjects = useSelector(ProjectActor, (state) => state.matches('fetching'));
 
-  const collapseList = () => {
-    setCollapsedList(true);
+  const expandList = () => {
+    setShowList(true);
   }
 
-  const expandList = () => {
-    setCollapsedList(false);
+  const collapseList = () => {
+    setShowList(false);
   }
 
   const addProjects = () => {
@@ -51,7 +51,7 @@ const ProjectsPanel: React.FC<ProjectsPanelProps> = () => {
     RecordActor.send({ type: 'FETCH' })
   }
 
-  if (collapsedList) {
+  if (!showList) {
     return (
       <>
         <Col gap={10} style={{ textAlign: 'center', flex: 'none' }}>

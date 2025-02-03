@@ -1,10 +1,11 @@
 import { isProjectDone, isProjectIncubated, isProjectPending } from "@/utils";
 import { isDoneDate } from "@/utils/dates";
-import { useState, useMemo } from "react";
+import { useCallback, useMemo } from "react";
+import useConditionalLocalStorage from "./useConditionalLocalStorage";
 
-export function useProjectFilter(projects: Project[], initialFilterState?: Partial<FilterState>) {
+export function useProjectFilter(projects: Project[], initialFilterState?: Partial<FilterState>, storageKey?: string) {
   // A regular useState for the filter state
-  const [filterState, _setFilterState] = useState<FilterState>({
+  const [filterState, _setFilterState] = useConditionalLocalStorage<FilterState>(storageKey, {
     progressState: undefined,
     tagState: undefined,
     // selectedTag: undefined,
@@ -15,7 +16,7 @@ export function useProjectFilter(projects: Project[], initialFilterState?: Parti
   });
 
   // Wrap the setFilterState
-  function setFilterState(arg: SetFilterStateArg) {
+  const setFilterState = useCallback((arg: SetFilterStateArg) => {
     _setFilterState((prev) => {
       if (typeof arg === 'function') {
         // If the user passes a function, just call it with the previous state
@@ -25,7 +26,7 @@ export function useProjectFilter(projects: Project[], initialFilterState?: Parti
         return { ...prev, ...arg };
       }
     });
-  }
+  }, [_setFilterState])
 
   // Filter your projects in a memo
   const filteredProjects = useMemo(() => {

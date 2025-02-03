@@ -18,7 +18,7 @@ const UpdateTagsForm: React.FC<UpdateProjectFormProps> = ({ project }) => {
   const projects = useSelector(ProjectActor, ({ context }) => context.resources);
 
   const [allTags,] = getTagsAndCount(projects);
-  const leftTags = allTags.filter((tag) => !project.tags.includes(tag));
+  const leftTags = allTags.sort().filter((tag) => !project.tags.includes(tag));
 
   const [upperRowTags, setUpperRowTags] = useState<string[]>(project.tags);
   const [lowerRowTags, setLowerRowTags] = useState<string[]>(leftTags);
@@ -59,7 +59,7 @@ const UpdateTagsForm: React.FC<UpdateProjectFormProps> = ({ project }) => {
     setError('');
     setUpperRowTags(project.tags);
     const [allTags,] = getTagsAndCount(projects);
-    const leftTags = allTags.filter((tag) => !project.tags.includes(tag));
+    const leftTags = allTags.sort().filter((tag) => !project.tags.includes(tag));
     setLowerRowTags(leftTags);
   }, [project, projects]);
 
