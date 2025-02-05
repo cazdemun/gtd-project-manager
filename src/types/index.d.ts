@@ -45,3 +45,7 @@ type OrderInfo = {
   order: number | undefined;
   index: number;
 }
+
+type TagsColors = {
+  [key: string]: string | undefined;
+}

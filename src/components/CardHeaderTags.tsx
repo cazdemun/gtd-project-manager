@@ -4,6 +4,8 @@ import { Popover, Row } from "@/app/ui";
 import { getTagsAndCount } from "@/utils";
 import { useSelector } from "@xstate/react";
 import { VALID_TAG_REGEX } from "@/utils/constants";
+import TagBadge from "./TagBadge";
+import { useTagsColors } from "@/hooks/useTagColors";
 
 const isEqual = (tagsA: string[], tagsB: string[]): boolean => {
   if (tagsA.length !== tagsB.length) return false;
@@ -124,6 +126,8 @@ type CardHeaderTagsProps = {
 }
 
 const CardHeaderTags: React.FC<CardHeaderTagsProps> = ({ project, showPopover = true }) => {
+  const { tagsColors } = useTagsColors();
+
   return (
     <Popover
       content={showPopover ? (
@@ -134,7 +138,14 @@ const CardHeaderTags: React.FC<CardHeaderTagsProps> = ({ project, showPopover = 
     >
       <Row gap={10} centerY style={{ cursor: showPopover ? 'pointer' : 'text', flexWrap: 'wrap' }}>
         {project.tags.length > 0
-          ? project.tags.map((tag, i) => (<pre key={i}>{tag}</pre>))
+          ? project.tags
+            .sort()
+            .sort((a, b) => { // Sort the ones with colors first
+              const itemA = tagsColors[a] ? 1 : 0;
+              const itemB = tagsColors[b] ? 1 : 0;
+              return itemB - itemA;
+            })
+            .map((tag, i) => (<TagBadge key={i} tag={tag} />))
           : (<pre>[no tags]</pre>)
         }
       </Row>

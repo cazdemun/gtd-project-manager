@@ -73,7 +73,7 @@ export const BaseProjectCard: React.FC<BaseProjectCardProps> = ({ className: _cl
   const CardHeader = () => headerType === 'normal' ? <NormalCardHeader /> : <PeriodicCardHeader />;
 
   return (
-    <Col {...props} className={`${styles['project-card']} ${className}`} gap={10}>
+    <Col {...props} className={`${styles['project-card']} ${className}`} gap={10} style={{ ...props.style }}>
       {children ? children : <CardHeader />}
       {showDetails && content}
     </Col>

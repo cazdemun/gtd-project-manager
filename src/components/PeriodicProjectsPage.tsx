@@ -83,11 +83,9 @@ const PeriodicProjectsPage: React.FC<PeriodicProjectsPageProps> = () => {
   const selectMode = useSelector(AppActor, (state) => state.matches({ projectsPage: 'select' }) || state.matches({ periodicProjectsPage: 'select' }));
   const selectedProjects = useSelector(AppActor, (state) => state.context.selectedProjectIds);
 
-  const handleProjectSelect = (projectId: string) => {
-    AppActor.send({ type: 'SELECT_PROJECT', projectId });
-  };
-
   const { filterState, setFilterState, filteredProjects: periodicProjects } = useProjectFilter(_periodicProjects, { progressState: 'pending' }, CONFIG_PERIODICS_PAGE_FILTER);
+
+  // --- Actions ---
 
   const loadProjects = () => {
     SourceActor.send({ type: 'FETCH' })
@@ -95,9 +93,19 @@ const PeriodicProjectsPage: React.FC<PeriodicProjectsPageProps> = () => {
     RecordActor.send({ type: 'FETCH' })
   }
 
+  const selectProject = (projectId: string) => {
+    AppActor.send({ type: 'SELECT_PROJECT', projectId });
+  };
+
   const toggleShowPastProjects = () => {
     setShowPastProjects((prev) => !prev);
   }
+
+  const openTagManager = () => {
+    AppActor.send({ type: 'OPEN_TAG_MANAGER' });
+  }
+
+  // --- Computed values ---
 
   const unCategorizedProjects = periodicProjects
     .filter((project) => isPeriodicUncategorized(project, records))
@@ -106,8 +114,7 @@ const PeriodicProjectsPage: React.FC<PeriodicProjectsPageProps> = () => {
   const futureProjects = periodicProjects
     .filter((project) => isPeriodicFuture(project, records))
     .filter((project) => filterNonDailyFutureProject(project, records))
-    // getNextDate is guaranteed to be defined since future projects need to have a next date
-    .sort((a, b) => getNextDate(a, records)! - getNextDate(b, records)!);
+    .sort((a, b) => getNextDate(a, records)! - getNextDate(b, records)!); // getNextDate is guaranteed to be defined since future projects need to have a next date
 
   const doneTodayProjects = periodicProjects
     .filter((project) => wasPeriodicDoneToday(project, records))
@@ -149,12 +156,13 @@ const PeriodicProjectsPage: React.FC<PeriodicProjectsPageProps> = () => {
     <Col gap={10} style={{ padding: '20px' }}>
       <BulkOperationsBar />
       <FilterBar storageKey={CONFIG_SHOW_FILTER_BAR_PERIODIC_PAGE} filterState={filterState} updateFilterState={setFilterState} tagsStateFilter />
-      <div>
+      <Row gap={10}>
         <Button onClick={loadProjects} loading={fetchingProjects}>Load projects</Button>
-      </div>
+        <Button onClick={openTagManager}>Open tag manager</Button>
+      </Row>
       <Row gap={10}>
         {showPastProjects ? (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <Col gap={10} style={{ flex: 1 }}>
             <Row centerY>
               <h3 style={{ flex: 1 }}>Past Projects</h3>
               <Button className='icon-button' onClick={toggleShowPastProjects}><LuArrowLeftToLine /></Button>
@@ -170,48 +178,48 @@ const PeriodicProjectsPage: React.FC<PeriodicProjectsPageProps> = () => {
                 />
               ))}
             </div>
-          </div>
+          </Col>
         ) : (
-          <div style={{ flex: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <Col gap={10} style={{ flex: 0 }}>
             <Button className='icon-button' onClick={toggleShowPastProjects}><LuArrowRightToLine /></Button>
-          </div>
+          </Col>
         )}
         <hr />
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <Col gap={10} style={{ flex: 1 }}>
           <h3>Past Due Projects</h3>
           <div>
             {pastDueProjects.map((project) => (
               <PeriodicCard key={project._id} project={project} showCardHeaderTags showDaysUntilNextDate showPinControl />
             ))}
           </div>
-        </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        </Col>
+        <Col gap={10} style={{ flex: 1 }}>
           <h3>Today Projects</h3>
           <div>
             {todayProjects.map((project) => (
               <PeriodicCard key={project._id} project={project} showCardHeaderTags showPinControl />
             ))}
           </div>
-        </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        </Col>
+        <Col gap={10} style={{ flex: 1 }}>
           <h3>Today Done Projects</h3>
           <div>
             {doneTodayProjects.map((project) => (
               <PeriodicCard key={project._id} project={project} showCardHeaderTags />
             ))}
           </div>
-        </div>
+        </Col>
         <hr />
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <Col gap={10} style={{ flex: 1 }}>
           <h3>Future Projects</h3>
           <div>
             {futureProjects.map((project) => (
               <PeriodicCard key={project._id} project={project} showCardHeaderTags showDaysUntilNextDate />
             ))}
           </div>
-        </div>
+        </Col>
         <hr />
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <Col gap={10} style={{ flex: 1 }}>
           <h3>Uncategorized Projects</h3>
           <div>
             {unCategorizedProjects.map((project) =>
@@ -220,13 +228,13 @@ const PeriodicProjectsPage: React.FC<PeriodicProjectsPageProps> = () => {
                   key={project._id}
                   project={project}
                   selected={selectedProjects.includes(project._id)}
-                  onSelect={handleProjectSelect}
+                  onSelect={selectProject}
                 />
               ) : (
                 <PeriodicCard key={project._id} project={project} showCardHeaderTags showProgressControls={false} />
               ))}
           </div>
-        </div>
+        </Col>
       </Row >
       <Col gap={10}>
         <h2>Projects not Present in Columns</h2>

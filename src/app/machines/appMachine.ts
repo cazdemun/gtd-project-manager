@@ -19,6 +19,8 @@ export type MachineEvent =
   | { type: 'SELECT_PROJECT'; projectId: string; }
   | { type: 'IDLE_PROJECTS_MODE'; }
   | { type: 'CLEAR_SELECTED_PROJECT_IDS'; }
+  | { type: 'OPEN_TAG_MANAGER'; }
+  | { type: 'CLOSE_TAG_MANAGER'; }
 
 export const createAppMachine = setup({
   types: {
@@ -55,7 +57,7 @@ export const createAppMachine = setup({
     // },
   },
 }).createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5QEMAOqDEBxA8gfQAUAlHAKQFEBhAFQGUBtABgF1FRUB7WASwBduOAOzYgAHogC0AVgAsARgB0AThUAOWQDYA7ACZGGjTIA0IAJ6IZjBap1K5BuQGYNSrY8ZyAvp5NpMuQnIiAEkcABFgykISChoGFhFOHn4hEXEEHTkrDXUZRy0NWRk9HWMzCysbOwdnV3cvHxA-bHxyAA0CABkcIiCmViQQJL4BYUH0jUYZBW0CuT1VLRUZLRNzBEtrW3sNJxc3D29fdBa8LAJqfsSuEdTxxC0tRSKlpSlF5dXyjcrtmv36kcmugFKgAE4cABWYAAxrxYARkDAFNwIAAbMAYWjkTpUajRMh42h4ACy4XIV0GwxSY1A6Wk6gUOkKUiyNikOikSjWiEyqmUNg0nMYWneqkYUikQL8oIh0LhCKRYAUsDAGLhGGCYVxBNidFJ5Mp7BuNLSkikbiZjmKMlUcg5ciUOlUPIQjntCkcjlUiy0jGZcns1ulIPBUNh8MRyNV6t4WJxeN1eKNQxNozNCAkOmZCi5Uye70e6gMrvdOgUWU5OkcUnyUkm2hDqFl4YVUeVMYjGEouIAgkQ8NjcTRyGEkzQ8Fr4gNjcl0-dM8z+dabE8gzJ5FJXXyBZylPsnDIlI4m6CwGCBBBuDCCHKI4ro2qu1qdcRCXEDWEKQkqWm7nTeTkLRrF0Y8lFUGRtFUfIvnWd0pE9b0fSArRV0gmRT1Qc9L2vW9W0jJUUXRTEh0TN89WJMkvxTal5wAjIJWseQcnAyDUJg7c5H5cCAxFWRJSrTDsI4K8bzvNtCM7DVSIncjkx-WdblpMREFkRR8mdJRLD9ZiNFLD0vR9O0ix0LQViEi8RNw8SCMfWNuz7AcZOoUdx3xKcaL-ZT0iPJQZntRg7QtKYdk47jBVsGxxW9JRvEaQQRLgEQ-GuOd-xUzNdCsJ19FUIVFnePJXQkSCZj9aDKzMoUnkwmyHzAVKlIzCRtHLHKcny0UIMcV0nEUW093A-Q7BrVRavw+qiIxRrTQXFrSmUPQOudLqiu+PI-NrSClD40V7WPcb5VsjsnzhGa6IyiR8j8+xRVtN4xR0V0Ntza1dD9SYnh9DQLJwsSJvbc70vSVQ-I0p0ZELT4eu+PqFAG3Yax2wMcl+qz-qOybUWm380u8xAnGA8HSihrS3GexxNreuQjw3NwVDR0S8Mx9sVVO3ggfxjYvRmbMIdJlYKaplZrQ8GxmWrU8wFEVA0Q4MFz0B3GmoXXZFEWWwSY+MneqcLZqkRgFTygVBeCVxTZvox5KlArXXkF2G9aqHY9jqOLPCAA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QEMAOqDEBxA8gfQAUAlHAKQFEBhAFQGUBtABgF1FRUB7WASwBduOAOzYgAHogC0AVgAsANgB0jAIwAmNTMaqAHHPkB2ADQgAnpJ1SFATkYyLc7cqty9AX1fG0mXIXJEAkjgAIv6UhCQUNAwsIpw8-EIi4gjS2jIKMgDMmVZSOtqZmnJGpojqygpyyvrKjFpqLoza7p7o2PjkABoEADI4RH5MrEggcXwCwiPJ0jKWjFI2qlazqrJyqsZmKXmKNnLL+o5Wypn6mS0gXu14WATUQ7Fc44lTknkVMtpNqjL6VvoqGTKTaSOSMTIKZSaRhyKQLIHrfQXLwKVAAJw4ACswABjXiwAjIGAKbgQAA2YAwtHIPSo1HCZDptDwAFlguQHiMxglJqBpmcFADlMpiro1PpVMUQSlMk1KrK-lJMlC7A4pMj0KiMdi8QSiWAFLAwBS8Rh-EFaQzInRWezOewnjykqCKi4rDYpMptNpVDDPlJpRJ1KoFKp9LMspk9E5anINagtVjcfjCcSjSbeFSaXSrXT7aNHRNnQgdOl-pltDVTus6nJMoH1JZPU1nNo8uHiucPJdNeik7rUwb08mMJRaQBBIh4am0mjkIK5mh4c3RYYO+JF14lrKhkWMGpfeYyT6B2XaeXfQpe3KOLutBOoMBogQQbg4gja5N64mkilZ2f0sQjJRLaQQcjEXKFi8fKghCZz6BKXyzPsKwyNKmRSIwkLCjCdbFAhdbxqiT4vm+H79im+qGsaI4zjmQHWvm3KbjBJY1IKViFPoVQIZxPpyNKx6KAY2RnMcMhWG2RGPs+HCvu+n4DlRw6mmO5CTtO2ZzguDE5iuTFQbyYhlLKSgYS4Ua8RW9alAgGFYcKtRtseDRhnePYPiRclkYplFpjRprmpaukgWyYEGRu0HGdsFQAnohy2FIKF5GhtlCRknanDkUKSTI0lefJ5E6n5Bq-pSOAEOQAByeDUOOWCsuOVX1YMEHrs8RnJJKViVGC8UaG2-zSqoqgQlGIoOPoSrgus+WyYVvnfgavBEiyyCCPqaKjn01K1fVjXNVgrVrgWkWdWUsIKD68g3gYU3yMNaQZGk5m-EC4K2O43aCHJcAiF4jxncWEh1iGka5PkhQwiUWwgzYlTQrC8IimG0mLYOgMdcDIoVOZhTZKNCxfDZsM5IoJxNAhWSYeCzTdiifbFUtJLkmAmNOluEjCmNSX45khOSeCgbekohwSs4-N-FCcb0726PKQFvDsyx0UnCGZN-NCji2DowvnvuuicfzN5tu5DMFT5FFLcrUXTF6WG+noRu2J85nSiclhii4lbTVGqhzaRClW4OLMUjb50pGroZ+s7x4FEl0pSACvXKgCcJ-HWSKy5582W0zIcqUrkFA1uIrpLY9lunCZeJ8nFnXnWULqtnxG50H+dUStUBrRtMBouHxZJR8qxhnY1fuqlWxJ1h9dp0nEtZ-eChgKIqBkhwaJPhjxdY5zag9dDOi5ElqzegJtnSJK1gwscEr7rkIpEVAqC8Nv7Uc6xXMnAoeORgLxOBjBBCKEdRCiSSWNxKwX1XBAA */
   id: 'app',
 
   initial: "projectsPage",
@@ -106,9 +108,15 @@ export const createAppMachine = setup({
               target: "select",
               actions: "assignSelectedProjectIds",
               reenter: true
+            },
+
+            OPEN_TAG_MANAGER: {
+              target: "tagManager",
+              reenter: true
             }
           }
         },
+
         select: {
           on: {
             SELECT_PROJECT: {
@@ -124,6 +132,15 @@ export const createAppMachine = setup({
             IDLE_PROJECTS_MODE: {
               target: "idle",
               actions: "clearSelectedProjectIds",
+              reenter: true
+            }
+          }
+        },
+
+        tagManager: {
+          on: {
+            CLOSE_TAG_MANAGER: {
+              target: "idle",
               reenter: true
             }
           }
