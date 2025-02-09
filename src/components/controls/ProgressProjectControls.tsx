@@ -1,5 +1,5 @@
 import React from 'react';
-import { getTitleText } from "@/utils";
+import { getTitleText, isProjectDone } from "@/utils";
 import { ProjectActor } from "@/app/resources";
 import BaseControl from "./BaseControl";
 import { AiOutlineCheck } from 'react-icons/ai';
@@ -19,15 +19,21 @@ const _updateProgress = (project: Project, progress: " " | "x" | "?") => {
   });
 };
 
-const DoneProjectControl: React.FC<ProgressProjectControlProps> = ({ project, show }) => {
+type DoneProjectControlProps = ProgressProjectControlProps & {
+  periodic?: boolean;
+};
+
+const DoneProjectControl: React.FC<DoneProjectControlProps> = ({ project, periodic, show }) => {
   const fetchingProject = useSelector(ProjectActor, (state) => state.matches('fetching'));
+
+  const isDone = isProjectDone(project);
 
   const doneProject = () => {
     _updateProgress(project, 'x');
   };
 
   return (
-    <BaseControl onClick={doneProject} icon={<AiOutlineCheck />} show={show} loading={fetchingProject}>Done</BaseControl>
+    <BaseControl onClick={doneProject} icon={<AiOutlineCheck />} disabled={isDone} show={show} loading={fetchingProject}>{periodic ? 'Finish' : 'Done'}</BaseControl>
   );
 };
 

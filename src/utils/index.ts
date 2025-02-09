@@ -138,14 +138,18 @@ export function isTextProjectPeriodic(textProject: TextProject): boolean {
   return textProject.title.match(/- .*?#periodic/) !== null;
 }
 
-export function getLastDoneDate(project: Project, records: DoneRecord[]): number | undefined {
+export function isProjectPeriodic(project: Project): boolean {
+  return isTextProjectPeriodic(project);
+}
+
+export function getLastDoneDate(project: Project, records: DoneRecord[],): number | undefined {
   const lastRecord = getLastRecord(project, records);
   if (lastRecord === undefined) return undefined;
   return lastRecord.date;
 }
 
-export function wasPeriodicDoneToday(project: Project, records: DoneRecord[]): boolean {
-  const lastRecord = getLastRecord(project, records);
+export function wasPeriodicDoneToday(project: Project, records: DoneRecord[], _lastRecord?: DoneRecord): boolean {
+  const lastRecord = _lastRecord ?? getLastRecord(project, records);
   if (lastRecord === undefined) return false;
   return isToday(lastRecord.date);
 }
@@ -157,27 +161,26 @@ export const getNextDate = (project: Project, records: DoneRecord[]): number | u
   const scheduled = project.periodicData.scheduled;
   const period = project.periodicData.period;
 
-  const noPeriod = period === undefined || period === null || period < 1;
   const lastRecord = getLastRecord(project, records);
-  const noNextDateFromPeriod = noPeriod || !lastRecord;
-
-  const wasDoneToday = wasPeriodicDoneToday(project, records);
+  const nextDateFromPeriod = lastRecord && period && period > 0 ? addDays(lastRecord.date, period).getTime() : undefined;
+  const wasDoneToday = wasPeriodicDoneToday(project, records, lastRecord);
 
   /**
    * Schedule takes priority when:
    * 1. The schedule date is after today
    * 2. The schedule date is today but the project was not done yet
-   * 3. The schedule date was before today but there is not a last record or period (both must be present to calculate the next date)
+   * 3. The schedule date was before today:
+   *  3.1 There is no next day derived from period
+   *  3.2 The next day derived from period is before the scheduled date
    */
   if (scheduled && isAfterByDay(scheduled, new Date())) return scheduled;
   if (scheduled && isToday(scheduled) && !wasDoneToday) return scheduled;
-  if (scheduled && isBeforeByDay(scheduled, new Date()) && noNextDateFromPeriod) return scheduled;
+  if (scheduled && isBeforeByDay(scheduled, new Date())) {
+    if (!nextDateFromPeriod) return scheduled;
+    return isBeforeByDay(nextDateFromPeriod, scheduled) ? scheduled : nextDateFromPeriod;
+  };
 
-  // With no schedule nor a valid period, we return undefined
-  // With no record we can't calculate the next date even if we have a period
-  if (noNextDateFromPeriod) return undefined;
-
-  return addDays(lastRecord.date, period).getTime();
+  return nextDateFromPeriod;
 }
 
 export function daysFromToday(nextDate: number | undefined): number | undefined {

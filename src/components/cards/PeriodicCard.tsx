@@ -7,7 +7,7 @@ import { RecordActor } from "@/app/resources";
 import { DATE_FORMAT } from "@/utils/dates";
 import BaseProjectCard from "./BaseProjectCard";
 import CardHeaderTags from "../CardHeaderTags";
-import { EditProjectControl, CopyPasteControl, DeleteProjectControl, SwapTopControl, SwapBottomControl, SwapUpControl, SwapDownControl, DonePeriodicControl, PendingPeriodicControl, PeriodicPinControl } from "../controls";
+import { EditProjectControl, CopyPasteControl, DeleteProjectControl, SwapTopControl, SwapBottomControl, SwapUpControl, SwapDownControl, DonePeriodicControl, PendingPeriodicControl, PeriodicPinControl, DoneProjectControl } from "../controls";
 import UpdatePeriodicForm from "../forms/UpdatePeriodicForm";
 
 import styles from "./PeriodicCard.module.scss";
@@ -117,6 +117,7 @@ const PeriodicCard: React.FC<PeriodicCardProps> = ({ project, showCardHeaderTags
         < Row centerY gap={10} style={{ flexWrap: 'wrap' }}>
           <DonePeriodicControl project={project} show='onlyText' />
           <PendingPeriodicControl project={project} show='onlyText' />
+          <DoneProjectControl project={project} periodic show='onlyText' />
           {
             orderInfos && (
               <>
