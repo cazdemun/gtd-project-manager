@@ -3,7 +3,7 @@
 import React, { FormEvent, MouseEvent } from 'react';
 import { useSelector } from '@xstate/react';
 import { AiOutlineCloseCircle, AiOutlineDelete } from 'react-icons/ai';
-import { ProjectActor, SourceActor } from '@/app/resources';
+import { ProjectActor, RecordActor, SourceActor } from '@/app/resources';
 
 import './Sidebar.scss';
 
@@ -93,6 +93,7 @@ const Sidebar: React.FC<SidebarProps> = ({ visible, onClose }) => {
       updatedResources: updatedSources,
       afterUpdate: () => {
         ProjectActor.send({ type: 'FETCH' });
+        RecordActor.send({ type: 'FETCH' });
         onClose();
       }
     });

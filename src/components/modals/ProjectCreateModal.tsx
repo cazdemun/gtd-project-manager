@@ -3,16 +3,18 @@ import Modal from '@/app/ui/Modal';
 import { useSelector } from '@xstate/react';
 import { ProjectActor, ProjectUIActor } from '@/app/resources';
 import { Button, Col, Row, TextArea } from '@/app/ui';
-import { getTitleText } from '@/utils';
+import { getTitleText, isProjectPeriodic } from '@/utils';
 import { textToProjects } from '@/utils/repository';
-import NewProjectCard from './cards/NewProjectCard';
+import NewProjectCard from '../cards/NewProjectCard';
 
 type ProjectCreateModalProps = object
 
 const ProjectCreateModal: React.FC<ProjectCreateModalProps> = () => {
-  const projects = useSelector(ProjectActor, ({ context }) => context.resources);
   const projectCreateModal = useSelector(ProjectUIActor, (state) => state.matches('createModal'));
   const defaultTag = useSelector(ProjectUIActor, ({ context }) => context.createOptions?.defaultTag);
+  const createPeriodic = useSelector(ProjectUIActor, ({ context }) => context.createOptions?.createPeriodic);
+
+  const projects = useSelector(ProjectActor, ({ context }) => context.resources);
   const fetchingProjects = useSelector(ProjectActor, (state) => state.matches('fetching'));
   const updatingProjects = useSelector(ProjectActor, (state) => state.matches('updating'));
   const loading = fetchingProjects || updatingProjects;
@@ -36,6 +38,11 @@ const ProjectCreateModal: React.FC<ProjectCreateModalProps> = () => {
         const title = getTitleText(project.title);
         if (!title) return project;
         return { ...project, title: `- [?] ${title}` };
+      }).map((project) => {
+        if (!createPeriodic) return project;
+        const title = isProjectPeriodic(project) ? project.title : `${project.title} #periodic`;
+        if (!title) return project;
+        return { ...project, title };
       })
     setPotentialProjects(potentialResources);
   };
@@ -47,6 +54,11 @@ const ProjectCreateModal: React.FC<ProjectCreateModalProps> = () => {
 
   return (
     <Modal
+      title={(
+        <h3>
+          {`Create ${createPeriodic ? 'Periodics' : 'Projects'}`}
+        </h3>
+      )}
       width={potentialProjects.length > 0 ? '1000px' : '500px'}
       visible={projectCreateModal}
       onClose={closeModal}

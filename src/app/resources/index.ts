@@ -3,6 +3,7 @@ import { createResourceUIActor } from "../machines/resourceUIMachine";
 
 type ProjectCreateOptions = {
   defaultTag?: string;
+  createPeriodic?: boolean;
 }
 
 export const ProjectActor = createResourceActor<Project>('projects');

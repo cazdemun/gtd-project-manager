@@ -136,7 +136,7 @@ const CardHeaderTags: React.FC<CardHeaderTagsProps> = ({ project, showPopover = 
         </div>
       ) : null}
     >
-      <Row gap={10} centerY style={{ cursor: showPopover ? 'pointer' : 'text', flexWrap: 'wrap' }}>
+      <Row gap={[10, 2]} centerY style={{ cursor: showPopover ? 'pointer' : 'text', flexWrap: 'wrap' }}>
         {project.tags.length > 0
           ? project.tags
             .sort()

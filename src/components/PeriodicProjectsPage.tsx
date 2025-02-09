@@ -1,4 +1,4 @@
-import { ProjectActor, RecordActor, SourceActor } from '@/app/resources';
+import { ProjectActor, ProjectUIActor, RecordActor, SourceActor } from '@/app/resources';
 import { useSelector } from '@xstate/react';
 import React, { useState } from 'react';
 import { isValid, parse } from 'date-fns';
@@ -101,6 +101,10 @@ const PeriodicProjectsPage: React.FC<PeriodicProjectsPageProps> = () => {
     setShowPastProjects((prev) => !prev);
   }
 
+  const addProjects = () => {
+    ProjectUIActor.send({ type: 'OPEN_CREATE_MODAL', createOptions: { createPeriodic: true } });
+  }
+
   const openTagManager = () => {
     AppActor.send({ type: 'OPEN_TAG_MANAGER' });
   }
@@ -157,6 +161,7 @@ const PeriodicProjectsPage: React.FC<PeriodicProjectsPageProps> = () => {
       <BulkOperationsBar />
       <FilterBar storageKey={CONFIG_SHOW_FILTER_BAR_PERIODIC_PAGE} filterState={filterState} updateFilterState={setFilterState} tagsStateFilter />
       <Row gap={10}>
+        <Button onClick={addProjects} loading={fetchingProjects}>Add projects</Button>
         <Button onClick={loadProjects} loading={fetchingProjects}>Load projects</Button>
         <Button onClick={openTagManager}>Open tag manager</Button>
       </Row>
